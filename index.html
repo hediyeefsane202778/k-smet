@@ -1076,3 +1076,21 @@
                 if (arsiv[i] && arsiv[i].id !== id) {
                     yeniArsiv.push(arsiv[i]);
                 }
+            }
+            await firebaseKaydet('arsiv', yeniArsiv);
+            await listeyiGoster(document.getElementById('searchInput').value);
+        }
+    }
+
+    async function aramaYap() {
+        var metin = document.getElementById('searchInput').value;
+        await listeyiGoster(metin);
+    }
+
+    // Tarayıcının Yerleşik Yazdırma/PDF Kaydetme Motorunu Tetikleyen Fonksiyon
+    function arsiviPdfOlarakIndir() {
+        window.print();
+    }
+</script>
+</body>
+</html>
