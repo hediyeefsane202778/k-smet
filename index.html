@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Güvenlik ve Şifreli Yönetici Sistemi</title>
+    <title>Güvenlik ve Ziyaretçi Yönetim Sistemi</title>
     <style>
         :root {
             --primary-color: #0066cc;
@@ -296,17 +296,15 @@
 
 <div class="container">
     
-    <!-- 1. ANA EKRAN: ŞİRKET GİRİŞ, BAŞVURU VE YÖNETİCİ PANELİ -->
+    <!-- 1. ANA EKRAN: GİRİŞ VE BAŞVURU -->
     <div id="homeScreen">
         <div class="header-nav" style="margin-top: 0;">
             <h2>🏢 ŞİRKET BAŞVURU VE GİRİŞ SİSTEMİ</h2>
         </div>
         
-        <!-- Şirket Kayıt ve Giriş Formu -->
+        <!-- Onaylı Giriş Alanı -->
         <div class="section-box" style="border-left: 5px solid var(--primary-color);">
             <h3 style="font-size: 14px; color: var(--primary-color); margin-bottom: 8px;">İşletme / Şirket İşlemleri</h3>
-            
-            <!-- Bilgilerle Giriş Alanı -->
             <div style="background: #e6f0fa; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
                 <label style="color: var(--primary-color); font-size: 12px;">Onaylandıktan Sonra Bilgilerinizle Giriş Yapın</label>
                 <div class="form-group" style="margin-top: 6px; margin-bottom: 8px;">
@@ -334,7 +332,7 @@
             <button class="btn-primary" onclick="sirketBasvurusuGonder()" style="padding: 10px; font-size: 14px;">BAŞVURU GÖNDER</button>
         </div>
 
-        <!-- Yönetici Giriş Paneli (Altta) -->
+        <!-- Yönetici Paneli Girişi -->
         <div class="section-box" style="border-left: 5px solid #6c757d;">
             <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">🔒 Yönetici Giriş Paneli</h3>
             <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Başvuruları yönetmek için şifrenizi girin.</p>
@@ -412,7 +410,6 @@
             <input type="tel" id="telefon" placeholder="05XX XXX XX XX">
         </div>
 
-        <!-- GİRİŞ VE ÇIKIŞ TARİH/SAAT ALANLARI -->
         <div class="form-group">
             <label>Giriş Tarihi ve Saati</label>
             <input type="datetime-local" id="girisTarihSaat">
@@ -457,25 +454,41 @@
 </div>
 
 <script>
-    let secilenGirisTuru = "Araçlı Giriş";
-    let secilenCinsiyet = "Erkek";
-    let secilenSebep = "Misafir / Ziyaretçi";
+    var secilenGirisTuru = "Araçlı Giriş";
+    var secilenCinsiyet = "Erkek";
+    var secilenSebep = "Misafir / Ziyaretçi";
+
+    function getIstekler() {
+        return JSON.parse(localStorage.getItem('sirketIstekleri') || '[]');
+    }
+
+    function setIstekler(list) {
+        localStorage.setItem('sirketIstekleri', JSON.stringify(list));
+    }
+
+    function getArsiv() {
+        return JSON.parse(localStorage.getItem('ziyaretciArsivi') || '[]');
+    }
+
+    function setArsiv(list) {
+        localStorage.setItem('ziyaretciArsivi', JSON.stringify(list));
+    }
 
     function suankiTarihSaatGetir() {
-        const simdi = new Date();
-        const yil = simdi.getFullYear();
-        const ay = String(simdi.getMonth() + 1).padStart(2, '0');
-        const gun = String(simdi.getDate()).padStart(2, '0');
-        const saat = String(simdi.getHours()).padStart(2, '0');
-        const dakika = String(simdi.getMinutes()).padStart(2, '0');
-        return `${yil}-${ay}-${gun}T${saat}:${dakika}`;
+        var simdi = new Date();
+        var yil = simdi.getFullYear();
+        var ay = String(simdi.getMonth() + 1).padStart(2, '0');
+        var gun = String(simdi.getDate()).padStart(2, '0');
+        var saat = String(simdi.getHours()).padStart(2, '0');
+        var dakika = String(simdi.getMinutes()).padStart(2, '0');
+        return yil + '-' + ay + '-' + gun + 'T' + saat + ':' + dakika;
     }
 
     function setGirisTuru(tur) {
         secilenGirisTuru = tur;
-        const btnArac = document.getElementById('btnArac');
-        const btnYaya = document.getElementById('btnYaya');
-        const plakaGroup = document.getElementById('plakaGroup');
+        var btnArac = document.getElementById('btnArac');
+        var btnYaya = document.getElementById('btnYaya');
+        var plakaGroup = document.getElementById('plakaGroup');
 
         if (tur === 'Araçlı Giriş') {
             btnArac.classList.add('active');
@@ -491,8 +504,8 @@
 
     function setCinsiyet(cinsiyet) {
         secilenCinsiyet = cinsiyet;
-        const btnErkek = document.getElementById('btnErkek');
-        const btnKadin = document.getElementById('btnKadin');
+        var btnErkek = document.getElementById('btnErkek');
+        var btnKadin = document.getElementById('btnKadin');
 
         if (cinsiyet === 'Erkek') {
             btnErkek.classList.add('active');
@@ -505,54 +518,62 @@
 
     function setZiyaretSebebi(element, sebep) {
         secilenSebep = sebep;
-        document.querySelectorAll('.radio-item').forEach(item => item.classList.remove('active'));
+        var items = document.querySelectorAll('.radio-item');
+        for (var i = 0; i < items.length; i++) {
+            items[i].classList.remove('active');
+        }
         element.classList.add('active');
     }
 
     function sirketBasvurusuGonder() {
-        const sirketAdi = document.getElementById('basvuruSirket').value.trim();
-        const yetkili = document.getElementById('basvuruYetkili').value.trim();
-        const telefon = document.getElementById('basvuruTel').value.trim();
+        var sirketAdi = document.getElementById('basvuruSirket').value.trim();
+        var yetkili = document.getElementById('basvuruYetkili').value.trim();
+        var telefon = document.getElementById('basvuruTel').value.trim();
 
         if (!sirketAdi || !yetkili || !telefon) {
             alert("Lütfen tüm alanları doldurun!");
             return;
         }
 
-        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
+        var istekler = getIstekler();
         istekler.push({
-            id: Date.now(),
+            id: 'istek_' + Date.now(),
             sirketAdi: sirketAdi,
             yetkili: yetkili,
             telefon: telefon,
             durum: 'Onay Bekliyor',
             tarih: new Date().toLocaleDateString('tr-TR')
         });
-        localStorage.setItem('sirketIstekleri', JSON.stringify(istekler));
+        setIstekler(istekler);
 
         document.getElementById('basvuruSirket').value = '';
         document.getElementById('basvuruYetkili').value = '';
         document.getElementById('basvuruTel').value = '';
-
-        alert("Başvurunuz gönderildi! Yönetici onayladığında bu bilgileri yukarıdaki giriş alanına yazarak sisteme girebilirsiniz.");
+        alert("Başvurunuz başarıyla gönderildi! Yönetici onayladığında bu bilgilerle giriş yapabilirsiniz.");
     }
 
     function sirketGirisYap() {
-        const sirketAdi = document.getElementById('girisSirketAdi').value.trim();
-        const yetkiliAdi = document.getElementById('girisYetkiliAdi').value.trim();
-        const telefon = document.getElementById('girisTelefon').value.trim();
+        var sirketAdi = document.getElementById('girisSirketAdi').value.trim();
+        var yetkiliAdi = document.getElementById('girisYetkiliAdi').value.trim();
+        var telefon = document.getElementById('girisTelefon').value.trim();
 
         if (!sirketAdi || !yetkiliAdi || !telefon) {
-            alert("Lütfen giriş için Şirket Adı, Yetkili Adı ve Telefon numaranızı yazın!");
+            alert("Lütfen Şirket Adı, Yetkili Adı ve Telefon numaranızı eksiksiz yazın!");
             return;
         }
 
-        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
-        let bulunan = istekler.find(r => 
-            r.sirketAdi.toLowerCase() === sirketAdi.toLowerCase() && 
-            r.yetkili.toLowerCase() === yetkiliAdi.toLowerCase() && 
-            r.telefon === telefon
-        );
+        var istekler = getIstekler();
+        var bulunan = null;
+        for (var i = 0; i < istekler.length; i++) {
+            var r = istekler[i];
+            if (r.sirketAdi && r.yetkili && r.telefon &&
+                r.sirketAdi.toLowerCase() === sirketAdi.toLowerCase() && 
+                r.yetkili.toLowerCase() === yetkiliAdi.toLowerCase() && 
+                r.telefon === telefon) {
+                bulunan = r;
+                break;
+            }
+        }
 
         if (bulunan) {
             if (bulunan.durum === 'Onaylandı') {
@@ -561,20 +582,17 @@
                 document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
                 alert("Giriş başarılı! Hoş geldiniz.");
             } else if (bulunan.durum === 'Engellendi') {
-                alert("Üzgünüz, başvurunuz yönetici tarafından engellenmiştir.");
+                alert("Erişim Reddedildi: Bu kayıt yönetici tarafından engellenmiştir.");
             } else {
-                alert("Başvurunuz henüz onay bekliyor. Lütfen yöneticinin onaylamasını bekleyin.");
+                alert("Erişim Beklemede: Bu başvuru henüz onaylanmamıştır! Giriş yapamazsınız.");
             }
         } else {
-            document.getElementById('homeScreen').classList.add('hidden');
-            document.getElementById('formScreen').classList.remove('hidden');
-            document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
-            alert("Giriş başarılı! Hoş geldiniz.");
+            alert("Erişim Reddedildi: Onaylanmamış veya sistemde kayıtlı olmayan bilgiler!");
         }
     }
 
     function yoneticiGirisYap() {
-        const girilenSifre = document.getElementById('yoneticiSifre').value.trim();
+        var girilenSifre = document.getElementById('yoneticiSifre').value.trim();
         if (girilenSifre === "Zeynep1011") {
             document.getElementById('yoneticiSifre').value = '';
             document.getElementById('homeScreen').classList.add('hidden');
@@ -586,57 +604,67 @@
     }
 
     function yoneticiIstekleriniGoster() {
-        const container = document.getElementById('pendingRequestsList');
-        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
+        var container = document.getElementById('pendingRequestsList');
+        var istekler = getIstekler();
 
         if (istekler.length === 0) {
             container.innerHTML = '<div class="empty-message">Henüz gelen başvuru bulunmuyor.</div>';
             return;
         }
 
-        let html = '';
-        istekler.forEach(req => {
-            let durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : 'request-card';
-            let engelleKaldirBtn = req.durum === 'Engellendi' 
-                ? `<button class="btn-success" onclick="durumDegistir(${req.id}, 'Onay Bekliyor')">Engeli Kaldır</button>`
-                : `<button class="btn-danger" onclick="durumDegistir(${req.id}, 'Engellendi')">Engelle</button>`;
+        var html = '';
+        for (var i = 0; i < istekler.length; i++) {
+            var req = istekler[i];
+            var durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : 'request-card';
+            var engelleKaldirBtn = req.durum === 'Engellendi' 
+                ? '<button class="btn-success" onclick="durumDegistir(\'' + req.id + '\', \'Onay Bekliyor\')">Engeli Kaldır</button>'
+                : '<button class="btn-danger" onclick="durumDegistir(\'' + req.id + '\', \'Engellendi\')">Engelle</button>';
 
-            html += `
-                <div class="${durumClass}">
-                    <p><strong>İşletme:</strong> ${req.sirketAdi}</p>
-                    <p><strong>Yetkili:</strong> ${req.yetkili}</p>
-                    <p><strong>Telefon:</strong> ${req.telefon}</p>
-                    <p><strong>Durum:</strong> <span style="font-weight:bold; color:${req.durum==='Engellendi'?'red':(req.durum==='Onaylandı'?'green':'orange')}">${req.durum}</span></p>
-                    <div class="card-actions">
-                        <span class="time-badge">📅 ${req.tarih}</span>
-                        <div style="display: flex; gap: 5px;">
-                            ${req.durum !== 'Onaylandı' ? `<button class="btn-success" onclick="durumDegistir(${req.id}, 'Onaylandı')">Onayla</button>` : ''}
-                            ${engelleKaldirBtn}
-                            <button class="btn-danger" style="background:#6c757d;" onclick="basvuruyuSil(${req.id})">Sil</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
+            var onayBtn = req.durum !== 'Onaylandı' 
+                ? '<button class="btn-success" onclick="durumDegistir(\'' + req.id + '\', \'Onaylandı\')">Onayla</button>' 
+                : '';
+
+            html += '<div class="' + durumClass + '">' +
+                '<p><strong>İşletme:</strong> ' + req.sirketAdi + '</p>' +
+                '<p><strong>Yetkili:</strong> ' + req.yetkili + '</p>' +
+                '<p><strong>Telefon:</strong> ' + req.telefon + '</p>' +
+                '<p><strong>Durum:</strong> <span style="font-weight:bold; color:' + (req.durum==='Engellendi'?'red':(req.durum==='Onaylandı'?'green':'orange')) + '">' + req.durum + '</span></p>' +
+                '<div class="card-actions">' +
+                    '<span class="time-badge">📅 ' + req.tarih + '</span>' +
+                    '<div style="display: flex; gap: 5px;">' +
+                        onayBtn +
+                        engelleKaldirBtn +
+                        '<button class="btn-danger" style="background:#6c757d;" onclick="basvuruyuSil(\'' + req.id + '\')">Sil</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
         container.innerHTML = html;
     }
 
     function durumDegistir(id, yeniDurum) {
-        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
-        istekler = istekler.map(r => {
-            if (r.id === id) r.durum = yeniDurum;
-            return r;
-        });
-        localStorage.setItem('sirketIstekleri', JSON.stringify(istekler));
+        var istekler = getIstekler();
+        for (var i = 0; i < istekler.length; i++) {
+            if (istekler[i].id === id) {
+                istekler[i].durum = yeniDurum;
+                break;
+            }
+        }
+        setIstekler(istekler);
         yoneticiIstekleriniGoster();
-        alert("Başvuru durumu '" + yeniDurum + "' olarak güncellendi!");
+        alert("Durum '" + yeniDurum + "' olarak güncellendi!");
     }
 
     function basvuruyuSil(id) {
         if (confirm("Bu başvuruyu silmek istediğinize emin misiniz?")) {
-            let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
-            istekler = istekler.filter(r => r.id !== id);
-            localStorage.setItem('sirketIstekleri', JSON.stringify(istekler));
+            var istekler = getIstekler();
+            var yeniListe = [];
+            for (var i = 0; i < istekler.length; i++) {
+                if (istekler[i].id !== id) {
+                    yeniListe.push(istekler[i]);
+                }
+            }
+            setIstekler(yeniListe);
             yoneticiIstekleriniGoster();
         }
     }
@@ -677,15 +705,15 @@
     }
 
     function kaydetZiyaretci() {
-        const duzenlenenId = document.getElementById('duzenlenenId').value;
-        const plaka = document.getElementById('plaka').value.trim();
-        const adSoyad = document.getElementById('adSoyad').value.trim();
-        const tcNo = document.getElementById('tcNo').value.trim();
-        const telefon = document.getElementById('telefon').value.trim();
-        const girisTarih = document.getElementById('girisTarihSaat').value;
-        const cikisTarih = document.getElementById('cikisTarihSaat').value;
-        const ziyaretEdilen = document.getElementById('ziyaretEdilen').value.trim();
-        const fotoInput = document.getElementById('kimlikFoto');
+        var duzenlenenId = document.getElementById('duzenlenenId').value;
+        var plaka = document.getElementById('plaka').value.trim();
+        var adSoyad = document.getElementById('adSoyad').value.trim();
+        var tcNo = document.getElementById('tcNo').value.trim();
+        var telefon = document.getElementById('telefon').value.trim();
+        var girisTarih = document.getElementById('girisTarihSaat').value;
+        var cikisTarih = document.getElementById('cikisTarihSaat').value;
+        var ziyaretEdilen = document.getElementById('ziyaretEdilen').value.trim();
+        var fotoInput = document.getElementById('kimlikFoto');
 
         if (!adSoyad || !tcNo) {
             alert("Lütfen 'Adı Soyadı' ve 'TC Kimlik Numarası' alanlarını doldurun!");
@@ -693,82 +721,78 @@
         }
 
         if (fotoInput.files && fotoInput.files[0]) {
-            const reader = new FileReader();
+            var reader = new FileReader();
             reader.onload = function(e) {
                 veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, secilenCinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, e.target.result);
             };
             reader.readAsDataURL(fotoInput.files[0]);
         } else {
-            let eskiFoto = null;
+            var eskiFoto = null;
+            var arsiv = getArsiv();
             if (duzenlenenId) {
-                let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
-                let eskiKayit = kayitlar.find(k => k.id == duzenlenenId);
-                if (eskiKayit) eskiFoto = eskiKayit.foto;
+                for (var i = 0; i < arsiv.length; i++) {
+                    if (arsiv[i].id == duzenlenenId) {
+                        eskiFoto = arsiv[i].foto;
+                        break;
+                    }
+                }
             }
             veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, secilenCinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFoto);
         }
     }
 
     function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, cinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoData) {
-        let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
-
         function formatTarih(tarihStr) {
             if (!tarihStr) return 'Belirtilmedi';
-            let d = new Date(tarihStr);
+            var d = new Date(tarihStr);
             return d.toLocaleString('tr-TR', {dateStyle: 'short', timeStyle: 'short'});
         }
 
-        const formatGiris = formatTarih(girisTarih);
-        const formatCikis = formatTarih(cikisTarih);
+        var formatGiris = formatTarih(girisTarih);
+        var formatCikis = formatTarih(cikisTarih);
 
+        var kayitVerisi = {
+            id: duzenlenenId || ('arsiv_' + Date.now()),
+            girisTuru: secilenGirisTuru,
+            plaka: secilenGirisTuru === 'Araçlı Giriş' ? (plaka || 'Plaka Girilmedi') : 'Yaya Girişi',
+            adSoyad: adSoyad,
+            cinsiyet: cinsiyet,
+            tcNo: tcNo,
+            telefon: telefon || 'Belirtilmemiş',
+            girisTarihSaat: formatGiris,
+            cikisTarihSaat: formatCikis,
+            sebep: secilenSebep,
+            ziyaretEdilen: ziyaretEdilen || 'Belirtilmemiş',
+            foto: fotoData || null
+        };
+
+        var arsiv = getArsiv();
         if (duzenlenenId) {
-            kayitlar = kayitlar.map(k => {
-                if (k.id == duzenlenenId) {
-                    return {
-                        ...k,
-                        girisTuru: secilenGirisTuru,
-                        plaka: secilenGirisTuru === 'Araçlı Giriş' ? (plaka || 'Plaka Girilmedi') : 'Yaya Girişi',
-                        adSoyad: adSoyad,
-                        cinsiyet: cinsiyet,
-                        tcNo: tcNo,
-                        telefon: telefon || 'Belirtilmemiş',
-                        girisTarihSaat: formatGiris,
-                        cikisTarihSaat: formatCikis,
-                        sebep: secilenSebep,
-                        ziyaretEdilen: ziyaretEdilen || 'Belirtilmemiş',
-                        foto: fotoData || k.foto
-                    };
+            for (var i = 0; i < arsiv.length; i++) {
+                if (arsiv[i].id == duzenlenenId) {
+                    arsiv[i] = kayitVerisi;
+                    break;
                 }
-                return k;
-            });
-            alert("Kayıt başarıyla güncellendi!");
+            }
+            alert("Kayıt güncellendi!");
         } else {
-            const yeniKayit = {
-                id: Date.now(),
-                girisTuru: secilenGirisTuru,
-                plaka: secilenGirisTuru === 'Araçlı Giriş' ? (plaka || 'Plaka Girilmedi') : 'Yaya Girişi',
-                adSoyad: adSoyad,
-                cinsiyet: cinsiyet,
-                tcNo: tcNo,
-                telefon: telefon || 'Belirtilmemiş',
-                girisTarihSaat: formatGiris,
-                cikisTarihSaat: formatCikis,
-                sebep: secilenSebep,
-                ziyaretEdilen: ziyaretEdilen || 'Belirtilmemiş',
-                foto: fotoData
-            };
-            kayitlar.unshift(yeniKayit);
-            alert("Kayıt başarıyla dosyaya eklendi!");
+            arsiv.push(kayitVerisi);
+            alert("Kayıt dosyaya eklendi!");
         }
-
-        localStorage.setItem('ziyaretciArsivi', JSON.stringify(kayitlar));
+        setArsiv(arsiv);
         formuSifirla();
         openArchive();
     }
 
     function kaydiDuzenle(id) {
-        let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
-        let k = kayitlar.find(item => item.id == id);
+        var arsiv = getArsiv();
+        var k = null;
+        for (var i = 0; i < arsiv.length; i++) {
+            if (arsiv[i].id == id) {
+                k = arsiv[i];
+                break;
+            }
+        }
         if (!k) return;
 
         document.getElementById('duzenlenenId').value = k.id;
@@ -792,9 +816,9 @@
         document.getElementById('formScreen').classList.remove('hidden');
     }
 
-    function listeyiGoster(filtreMetni = "") {
-        const listContainer = document.getElementById('visitorList');
-        let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
+    function listeyiGoster(filtreMetni) {
+        var listContainer = document.getElementById('visitorList');
+        var kayitlar = getArsiv().slice().reverse();
 
         if (kayitlar.length === 0) {
             listContainer.innerHTML = '<div class="empty-message">Dosyada henüz kayıt bulunmuyor.</div>';
@@ -802,12 +826,18 @@
         }
 
         if (filtreMetni) {
-            const aranan = filtreMetni.toLowerCase();
-            kayitlar = kayitlar.filter(k => 
-                k.tcNo.toLowerCase().includes(aranan) || 
-                k.plaka.toLowerCase().includes(aranan) ||
-                k.adSoyad.toLowerCase().includes(aranan)
-            );
+            var aranan = filtreMetni.toLowerCase();
+            var filtrelenmis = [];
+            for (var i = 0; i < kayitlar.length; i++) {
+                var k = kayitlar[i];
+                var tcMatch = k.tcNo && k.tcNo.toLowerCase().indexOf(aranan) !== -1;
+                var plakaMatch = k.plaka && k.plaka.toLowerCase().indexOf(aranan) !== -1;
+                var adMatch = k.adSoyad && k.adSoyad.toLowerCase().indexOf(aranan) !== -1;
+                if (tcMatch || plakaMatch || adMatch) {
+                    filtrelenmis.push(k);
+                }
+            }
+            kayitlar = filtrelenmis;
         }
 
         if (kayitlar.length === 0) {
@@ -815,42 +845,46 @@
             return;
         }
 
-        let html = '';
-        kayitlar.forEach(k => {
-            let fotoHtml = k.foto ? `<br><img src="${k.foto}" class="id-photo-preview">` : '';
-            html += `
-                <div class="visitor-card">
-                    <p><strong>Ad Soyad:</strong> ${k.adSoyad} (${k.cinsiyet})</p>
-                    <p><strong>TC No:</strong> ${k.tcNo} | <strong>Tel:</strong> ${k.telefon}</p>
-                    <p><strong>Giriş Türü:</strong> ${k.girisTuru} (${k.plaka})</p>
-                    <p><strong>Giriş:</strong> ${k.girisTarihSaat || 'Belirtilmedi'}</p>
-                    <p><strong>Çıkış:</strong> ${k.cikisTarihSaat || 'Belirtilmedi'}</p>
-                    <p><strong>Sebep:</strong> ${k.sebep} → <strong>Gidilen:</strong> ${k.ziyaretEdilen}</p>
-                    ${fotoHtml}
-                    <div class="card-actions">
-                        <span class="time-badge">🕒 Kayıt Arşivi</span>
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn-warning" onclick="kaydiDuzenle(${k.id})">Düzenle</button>
-                            <button class="btn-danger" onclick="kaydiSil(${k.id})">Sil</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
+        var html = '';
+        for (var j = 0; j < kayitlar.length; j++) {
+            var k = kayitlar[j];
+            var fotoHtml = k.foto ? '<br><img src="' + k.foto + '" class="id-photo-preview">' : '';
+            html += '<div class="visitor-card">' +
+                '<p><strong>Ad Soyad:</strong> ' + k.adSoyad + ' (' + k.cinsiyet + ')</p>' +
+                '<p><strong>TC No:</strong> ' + k.tcNo + ' | <strong>Tel:</strong> ' + k.telefon + '</p>' +
+                '<p><strong>Giriş Türü:</strong> ' + k.girisTuru + ' (' + k.plaka + ')</p>' +
+                '<p><strong>Giriş:</strong> ' + (k.girisTarihSaat || 'Belirtilmedi') + '</p>' +
+                '<p><strong>Çıkış:</strong> ' + (k.cikisTarihSaat || 'Belirtilmedi') + '</p>' +
+                '<p><strong>Sebep:</strong> ' + k.sebep + ' → <strong>Gidilen:</strong> ' + k.ziyaretEdilen + '</p>' +
+                fotoHtml +
+                '<div class="card-actions">' +
+                    '<span class="time-badge">🕒 Yerel Arşiv</span>' +
+                    '<div style="display: flex; gap: 5px;">' +
+                        '<button class="btn-warning" onclick="kaydiDuzenle(\'' + k.id + '\')">Düzenle</button>' +
+                        '<button class="btn-danger" onclick="kaydiSil(\'' + k.id + '\')">Sil</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
 
         listContainer.innerHTML = html;
     }
 
     function aramaYap() {
-        const arananDeger = document.getElementById('searchInput').value;
+        var arananDeger = document.getElementById('searchInput').value;
         listeyiGoster(arananDeger);
     }
 
     function kaydiSil(id) {
-        if (confirm("Bu kaydı dosyadan silmek istediğinize emin misiniz?")) {
-            let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
-            kayitlar = kayitlar.filter(k => k.id !== id);
-            localStorage.setItem('ziyaretciArsivi', JSON.stringify(kayitlar));
+        if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
+            var arsiv = getArsiv();
+            var yeniArsiv = [];
+            for (var i = 0; i < arsiv.length; i++) {
+                if (arsiv[i].id != id) {
+                    yeniArsiv.push(arsiv[i]);
+                }
+            }
+            setArsiv(yeniArsiv);
             listeyiGoster(document.getElementById('searchInput').value);
         }
     }
