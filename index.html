@@ -3,258 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPSS Soru Cevap - Pro Plus</title>
+    <title>Güvenlik ve Şifreli Yönetici Sistemi</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+        :root {
+            --primary-color: #0066cc;
+            --primary-hover: #0052a3;
+            --danger-color: #dc3545;
+            --danger-hover: #bd2130;
+            --success-color: #28a745;
+            --success-hover: #218838;
+            --warning-color: #ffc107;
+            --warning-hover: #e0a800;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #ced4da;
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 10px 15px;
+        }
+
         .container {
-            background: #1e293b;
-            width: 100%;
-            max-width: 480px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 0 20px rgba(0,0,0,0.6);
-            position: relative;
-            box-sizing: border-box;
-            padding-bottom: 70px;
-        }
-        /* GÜNÜN SÖZÜ ALANI */
-        .gunun-sozu-box {
-            background: linear-gradient(135deg, #4f46e5, #3b82f6);
-            color: white;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card-bg);
             padding: 15px 20px;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-        .gunun-sozu-baslik {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #fde047;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .gunun-sozu-metin {
-            font-size: 14px;
-            line-height: 1.4;
-            font-style: italic;
-        }
-        /* GÜNÜN SÖZÜNÜN ALTINDAKİ INSTAGRAM BUTONU */
-        .ust-insta-kutu {
-            background: #0f172a;
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid #334155;
-        }
-        .insta-btn {
-            display: inline-block;
-            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            color: white;
-            padding: 8px 18px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 13px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-        .insta-btn:hover {
-            transform: scale(1.05);
-        }
-        .content-area {
-            padding: 20px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-        h2 {
-            color: #f8fafc;
-            text-align: center;
-            margin-top: 0;
-            font-size: 22px;
-        }
-        .screen {
-            display: none;
-        }
-        .active-screen {
-            display: block;
-        }
-        /* Ders Butonları */
-        .ders-listesi {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .ders-satir {
-            display: flex;
-            align-items: center;
-            background: #4338ca;
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
-        .ders-satir:hover {
-            transform: scale(1.02);
+
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
         }
-        .ders-isim {
-            flex-grow: 1;
-            padding: 14px 16px;
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 17px;
+        }
+
+        .nav-btn {
+            background-color: #6c757d;
             color: white;
-            font-weight: 600;
-            font-size: 15px;
-        }
-        .basla-btn {
-            background-color: #fbbf24;
-            color: #1e293b;
             border: none;
-            padding: 14px 22px;
-            font-weight: bold;
-            font-size: 15px;
+            padding: 6px 10px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
+            font-size: 12px;
+            font-weight: 600;
         }
-        .basla-btn:hover {
-            background-color: #f59e0b;
+
+        .nav-btn:hover {
+            background-color: #5a6268;
         }
-        /* Soru Ekranı Stilleri */
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
+
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             font-weight: 600;
-            color: #94a3b8;
+            font-size: 13px;
+            color: #495057;
         }
-        input[type="number"], button.action-btn {
+
+        input[type="text"], input[type="tel"], input[type="password"], input[type="file"], input[type="datetime-local"] {
             width: 100%;
-            padding: 14px;
-            font-size: 16px;
-            border-radius: 10px;
-            border: 1px solid #475569;
-            box-sizing: border-box;
-            background: #0f172a;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .option-btn.active {
+            border-color: var(--primary-color);
+            background-color: #e6f0fa;
+            color: var(--primary-color);
+        }
+
+        .radio-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .radio-item {
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .radio-item.active {
+            border-color: var(--primary-color);
+            background-color: #e6f0fa;
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
             color: white;
-        }
-        button.action-btn {
-            background-color: #4f46e5;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button.action-btn:hover {
-            background-color: #4338ca;
-        }
-        .question-box {
-            font-size: 17px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            color: #f8fafc;
-            line-height: 1.5;
-            background: #0f172a;
-            padding: 16px;
-            border-radius: 10px;
-            border-left: 5px solid #fbbf24;
-            border: 1px solid #334155;
-        }
-        .options button {
-            display: block;
             width: 100%;
-            padding: 14px;
-            margin-bottom: 10px;
-            text-align: left;
-            background-color: #334155;
-            color: #f8fafc;
-            border: 1px solid #475569;
-            border-radius: 10px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
             font-size: 15px;
+            font-weight: bold;
             cursor: pointer;
+            margin-top: 5px;
         }
-        .options button.correct {
-            background-color: #2563eb !important;
-            color: white !important;
-            border-color: #38bdf8 !important;
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
             font-weight: bold;
         }
-        .options button.wrong {
-            background-color: #dc2626 !important;
-            color: white !important;
-            border-color: #ef4444 !important;
+
+        .btn-success:hover {
+            background-color: var(--success-hover);
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
             font-weight: bold;
         }
-        .navigation {
+
+        .btn-warning:hover {
+            background-color: var(--warning-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .archive-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .visitor-card, .request-card {
+            background: #f8f9fa;
+            border-left: 5px solid var(--primary-color);
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .request-card {
+            border-left-color: #ffc107;
+        }
+
+        .request-card.blocked {
+            border-left-color: #dc3545;
+            background: #fdf2f2;
+        }
+
+        .visitor-card p, .request-card p {
+            font-size: 12px;
+            margin-bottom: 3px;
+            color: #555;
+        }
+
+        .visitor-card p strong, .request-card p strong {
+            color: #222;
+        }
+
+        .card-actions {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-            gap: 10px;
+            align-items: center;
+            margin-top: 6px;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
         }
-        .navigation button {
-            padding: 12px 20px;
-            font-size: 15px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            background-color: #475569;
-            color: white;
-            font-weight: 600;
-        }
-        .navigation button.primary {
-            background-color: #4f46e5;
-        }
-        /* Alt Menü Barı */
-        .bottom-nav {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #1e293b;
-            border-top: 1px solid #334155;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            box-sizing: border-box;
-        }
-        .nav-item {
-            text-align: center;
-            color: #94a3b8;
+
+        .time-badge {
             font-size: 11px;
-            cursor: pointer;
-            text-decoration: none;
+            color: #888;
         }
-        .nav-item div {
-            font-size: 18px;
-            margin-bottom: 2px;
+
+        .id-photo-preview {
+            max-width: 90px;
+            max-height: 60px;
+            border-radius: 4px;
+            margin-top: 4px;
+            border: 1px solid #ddd;
         }
-        .nav-item:hover {
-            color: #fbbf24;
+
+        .hidden {
+            display: none !important;
         }
-        /* Sonuç Kartı */
-        .sonuc-karti {
-            background: #0f172a;
-            padding: 20px;
-            border-radius: 12px;
+
+        .empty-message {
             text-align: center;
-            border: 1px solid #334155;
-            margin-bottom: 20px;
+            color: #777;
+            padding: 15px;
+            font-size: 13px;
         }
-        .skor-degeri {
-            font-size: 30px;
-            font-weight: bold;
-            color: #22c55e;
-            margin: 10px 0;
+
+        .section-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
         }
     </style>
 </head>
@@ -262,260 +296,563 @@
 
 <div class="container">
     
-    <!-- ÜST KISIM: GÜNÜN SÖZÜ -->
-    <div class="gunun-sozu-box">
-        <div class="gunun-sozu-baslik">⭐ Günün Sözü</div>
-        <div class="gunun-sozu-metin" id="gununSozuMetin">"Bütün başarıların başlangıç noktası arzulamaktır. Zayıf arzular, zayıf sonuçlar getirir." (Napoleon Hill)</div>
-    </div>
-
-    <!-- GÜNÜN SÖZÜNÜN HEMEN ALTINDAKİ İNSTAGRAM YÖNLENDİRMESİ -->
-    <div class="ust-insta-kutu">
-        <a href="https://instagram.com/ozelgunrotasi3447" target="_blank" class="insta-btn">📸 Instagram: @ozelgunrotasi3447</a>
-    </div>
-
-    <!-- ORTA ALAN: EKRANLAR -->
-    <div class="content-area">
+    <!-- 1. ANA EKRAN: ŞİRKET GİRİŞ, BAŞVURU VE YÖNETİCİ PANELİ -->
+    <div id="homeScreen">
+        <div class="header-nav" style="margin-top: 0;">
+            <h2>🏢 ŞİRKET BAŞVURU VE GİRİŞ SİSTEMİ</h2>
+        </div>
         
-        <!-- 1. DERSLER MENÜSÜ -->
-        <div id="menuScreen" class="screen active-screen">
-            <h2>KPSS Ortaöğretim Soru Bankası</h2>
-            <div class="ders-listesi" style="margin-top: 15px;">
-                <div class="ders-satir">
-                    <div class="ders-isim">Tarih Soru Cevap</div>
-                    <button class="basla-btn" onclick="dersSec('tarih')">Başla</button>
-                </div>
-                <div class="ders-satir">
-                    <div class="ders-isim">Coğrafya Soru Cevap</div>
-                    <button class="basla-btn" onclick="dersSec('cografya')">Başla</button>
-                </div>
-                <div class="ders-satir">
-                    <div class="ders-isim">Vatandaşlık Soru Cevap</div>
-                    <button class="basla-btn" onclick="dersSec('vatandaslik')">Başla</button>
-                </div>
-                <div class="ders-satir">
-                    <div class="ders-isim">Türkçe Soru Cevap</div>
-                    <button class="basla-btn" onclick="dersSec('turkce')">Başla</button>
-                </div>
-                <div class="ders-satir">
-                    <div class="ders-isim">Matematik Soru Cevap</div>
-                    <button class="basla-btn" onclick="dersSec('matematik')">Başla</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. SORU SAYISI SEÇME EKRANI -->
-        <div id="setupScreen" class="screen">
-            <h3 id="secilenDersBaslik" style="text-align:center; color:#fbbf24; margin-bottom: 20px;"></h3>
-            <div class="form-group">
-                <label for="soruSayisiInput">Kaç Soru Çözmek İstiyorsun?</label>
-                <input type="number" id="soruSayisiInput" min="1" max="10" value="3">
-            </div>
-            <button class="action-btn" onclick="testiBaslat()">Oturumu Başlat</button>
-            <button onclick="menuyeDon()" style="background-color: #475569; color:white; margin-top:12px; width:100%; padding:14px; border:none; border-radius:10px; cursor:pointer; font-weight:600;">Ana Menüye Dön</button>
-        </div>
-
-        <!-- 3. SORU ÇÖZME EKRANI -->
-        <div id="quizScreen" class="screen">
-            <div id="bilgiKismi" style="font-size: 13px; color: #94a3b8; text-align: center; margin-bottom: 10px; font-weight: bold;"></div>
-            <div class="question-box" id="soruMetni">Soru yükleniyor...</div>
-            <div class="options" id="seceneklerAlani"></div>
+        <!-- Şirket Kayıt ve Giriş Formu -->
+        <div class="section-box" style="border-left: 5px solid var(--primary-color);">
+            <h3 style="font-size: 14px; color: var(--primary-color); margin-bottom: 8px;">İşletme / Şirket İşlemleri</h3>
             
-            <div class="navigation">
-                <button onclick="oncekiSoru()">Geri</button>
-                <span id="soruSayac" style="align-self: center; font-weight: bold; font-size: 15px; color: #f8fafc;"></span>
-                <button class="primary" onclick="sonrakiSoru()">İleri</button>
+            <!-- Bilgilerle Giriş Alanı -->
+            <div style="background: #e6f0fa; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
+                <label style="color: var(--primary-color); font-size: 12px;">Onaylandıktan Sonra Bilgilerinizle Giriş Yapın</label>
+                <div class="form-group" style="margin-top: 6px; margin-bottom: 8px;">
+                    <input type="text" id="girisSirketAdi" placeholder="Şirket Adı" style="font-size: 13px; padding: 8px; margin-bottom: 5px;">
+                    <input type="text" id="girisYetkiliAdi" placeholder="Yetkili Adı Soyadı" style="font-size: 13px; padding: 8px; margin-bottom: 5px;">
+                    <input type="tel" id="girisTelefon" placeholder="Telefon Numarası" style="font-size: 13px; padding: 8px;">
+                </div>
+                <button class="nav-btn" style="background:var(--primary-color); width: 100%; padding: 8px; font-weight: bold;" onclick="sirketGirisYap()">SİSTEME GİRİŞ YAP</button>
+            </div>
+
+            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Yeni kayıt olmak için bilgilerinizi doldurup başvurun:</p>
+            
+            <div class="form-group">
+                <label>İşletme / Site Adı</label>
+                <input type="text" id="basvuruSirket" placeholder="Örn: Bodrum Liman İşletmeleri">
+            </div>
+            <div class="form-group">
+                <label>Yetkili Adı Soyadı</label>
+                <input type="text" id="basvuruYetkili" placeholder="Adınız Soyadınız">
+            </div>
+            <div class="form-group">
+                <label>İletişim Telefonu</label>
+                <input type="tel" id="basvuruTel" placeholder="05XX XXX XX XX">
+            </div>
+            <button class="btn-primary" onclick="sirketBasvurusuGonder()" style="padding: 10px; font-size: 14px;">BAŞVURU GÖNDER</button>
+        </div>
+
+        <!-- Yönetici Giriş Paneli (Altta) -->
+        <div class="section-box" style="border-left: 5px solid #6c757d;">
+            <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">🔒 Yönetici Giriş Paneli</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Başvuruları yönetmek için şifrenizi girin.</p>
+            
+            <div class="form-group">
+                <label>Yönetici Şifresi</label>
+                <input type="password" id="yoneticiSifre" placeholder="Şifrenizi girin">
+            </div>
+            <button class="btn-primary" onclick="yoneticiGirisYap()" style="background-color: #495057; padding: 10px; font-size: 14px;">YÖNETİCİ PANELİNİ AÇ</button>
+        </div>
+    </div>
+
+    <!-- 2. YÖNETİCİ KONTROL PANELİ -->
+    <div id="adminPanelScreen" class="hidden">
+        <div class="header-nav" style="margin-top: 0;">
+            <h2>🛡️ YÖNETİCİ KONTROL PANELİ</h2>
+            <button class="nav-btn" style="background:#dc3545;" onclick="anaEkranaDon()">🔒 Çıkış Yap</button>
+        </div>
+        <div class="section-box">
+            <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">📥 Gelen Başvurular (Onayla / Engelle)</h3>
+            <div id="pendingRequestsList"></div>
+        </div>
+    </div>
+
+    <!-- 3. ANA GÜVENLİK VE ZİYARETÇİ KAYIT EKRANI -->
+    <div id="formScreen" class="hidden">
+        <div class="header-nav" style="margin-top: 0;">
+            <h2 id="formTitle">GÜVENLİK SİSTEMİ</h2>
+            <div style="display: flex; gap: 5px;">
+                <button class="nav-btn" onclick="openArchive()">📂 Dosya</button>
+                <button class="nav-btn" style="background:#dc3545;" onclick="anaEkranaDon()">🔒 Çıkış Yap</button>
             </div>
         </div>
 
-        <!-- 4. SONUÇ EKRANI -->
-        <div id="resultScreen" class="screen">
-            <div class="sonuc-karti">
-                <h3 style="color:#fbbf24; margin-top:0;">🎉 Oturum Tamamlandı!</h3>
-                <p id="istatistikMetin" style="color: #cbd5e1; font-size: 15px;"></p>
-                <div class="skor-degeri" id="puanGosterge">0 Puan</div>
+        <input type="hidden" id="duzenlenenId" value="">
+
+        <div class="form-group">
+            <label>Giriş Türü</label>
+            <div class="options-grid">
+                <div class="option-btn active" id="btnArac" onclick="setGirisTuru('Araçlı Giriş')">🚗 Araçlı Giriş</div>
+                <div class="option-btn" id="btnYaya" onclick="setGirisTuru('Yaya Girişi')">🚶‍♂️ Yaya Girişi</div>
             </div>
-            <button class="action-btn" onclick="menuyeDon()" style="background-color: #4f46e5;">Ana Menüye Dön</button>
         </div>
 
+        <div class="form-group" id="plakaGroup">
+            <label>Araç Plakası</label>
+            <input type="text" id="plaka" placeholder="Örn: 34 ABC 123">
+        </div>
+
+        <div class="form-group">
+            <label>Kimlik Fotoğrafı Çek / Yükle</label>
+            <input type="file" id="kimlikFoto" accept="image/*" capture="environment">
+        </div>
+
+        <div class="form-group">
+            <label>Adı Soyadı</label>
+            <input type="text" id="adSoyad" placeholder="Ziyaretçinin Adı Soyadı">
+        </div>
+
+        <div class="form-group">
+            <label>Cinsiyet</label>
+            <div class="options-grid">
+                <div class="option-btn active" id="btnErkek" onclick="setCinsiyet('Erkek')">👨 Erkek</div>
+                <div class="option-btn" id="btnKadin" onclick="setCinsiyet('Kadın')">👩 Kadın</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>TC Kimlik Numarası</label>
+            <input type="text" id="tcNo" maxlength="11" placeholder="11 haneli TC No">
+        </div>
+
+        <div class="form-group">
+            <label>Telefon Numarası</label>
+            <input type="tel" id="telefon" placeholder="05XX XXX XX XX">
+        </div>
+
+        <!-- GİRİŞ VE ÇIKIŞ TARİH/SAAT ALANLARI -->
+        <div class="form-group">
+            <label>Giriş Tarihi ve Saati</label>
+            <input type="datetime-local" id="girisTarihSaat">
+        </div>
+
+        <div class="form-group">
+            <label>Çıkış Tarihi ve Saati</label>
+            <input type="datetime-local" id="cikisTarihSaat">
+        </div>
+
+        <div class="form-group">
+            <label>Ziyaret Sebebi</label>
+            <div class="radio-list">
+                <div class="radio-item active" onclick="setZiyaretSebebi(this, 'Misafir / Ziyaretçi')">👤 Misafir / Ziyaretçi</div>
+                <div class="radio-item" onclick="setZiyaretSebebi(this, 'Kurye / Kargo')">📦 Kurye / Kargo</div>
+                <div class="radio-item" onclick="setZiyaretSebebi(this, 'Tedarikçi / Servis')">🛠️ Tedarikçi / Servis</div>
+                <div class="radio-item" onclick="setZiyaretSebebi(this, 'Tadilat / Usta')">🧱 Tadilat / Usta</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Ziyaret Edilen Yer / Kişi</label>
+            <input type="text" id="ziyaretEdilen" placeholder="Firma veya kişi adı">
+        </div>
+
+        <button class="btn-primary" id="kaydetGuncelleBtn" onclick="kaydetZiyaretci()">KAYDET VE DOSYAYA EKLE</button>
     </div>
 
-    <!-- ALT MENÜ BAR -->
-    <div class="bottom-nav">
-        <a class="nav-item" onclick="menuyeDon()">
-            <div>👤</div>
-            <span>Profil</span>
-        </a>
-        <a class="nav-item" onclick="menuyeDon()">
-            <div>💬</div>
-            <span>Soru Platformu</span>
-        </a>
-        <a class="nav-item" onclick="menuyeDon()">
-            <div>📜</div>
-            <span>KPSS Blog</span>
-        </a>
-        <a class="nav-item" onclick="menuyeDon()">
-            <div>⭐</div>
-            <span>Puan Tablosu</span>
-        </a>
-        <a class="nav-item" onclick="menuyeDon()">
-            <div>💎</div>
-            <span>Premium</span>
-        </a>
-    </div>
+    <!-- 4. KAYIT DOSYASI / ARŞİV EKRANI -->
+    <div id="archiveScreen" class="hidden">
+        <div class="header-nav" style="margin-top: 0;">
+            <h2>KAYIT DOSYASI (ARŞİV)</h2>
+            <button class="nav-btn" onclick="yeniKayitFormuAc()">➕ Yeni Ekle</button>
+        </div>
 
+        <div class="archive-header">
+            <input type="text" id="searchInput" class="search-input" placeholder="TC Kimlik veya Plaka ile ara..." onkeyup="aramaYap()">
+        </div>
+
+        <div id="visitorList"></div>
+    </div>
 </div>
 
 <script>
-    const gununSozleriListesi = [
-        "\"Bütün başarıların başlangıç noktası arzulamaktır. Zayıf arzular, zayıf sonuçlar getirir.\" (Napoleon Hill)",
-        "\"Bugün yaptığın şeyler, yarınki geleceğini belirler. Vazgeçmek yok!\"",
-        "\"Zafer, 'zafer benimdir' diyebilenlerindir. Başarı ise 'başaracağım' diye başlayarak nihayet erdirenlerindir.\"",
-        "\"Çalışmak, hayatın tuzu biberidir. Hedefine ulaşana kadar durmak yok, Mehmet Abi!\""
-    ];
+    let secilenGirisTuru = "Araçlı Giriş";
+    let secilenCinsiyet = "Erkek";
+    let secilenSebep = "Misafir / Ziyaretçi";
 
-    document.getElementById("gununSozuMetin").innerText = gununSozleriListesi[Math.floor(Math.random() * gununSozleriListesi.length)];
-
-    const soruHavuzu = {
-        turkce: [
-            { soru: "1. Aşağıdaki cümlelerin hangisinde altı çizili sözcüğün yazımında bir yanlışlık yapılmıştır?", secenekler: ["A) Herkes bu konuda aynı fikirdeydi.", "B) Yalnız kalmayı bugün tercih etti.", "C) Herşey düşündüğünden daha güzel başladı.", "D) Birtakım işlerimi bitirmem gerekiyor."], dogru: 2 },
-            { soru: "2. 'Gözden düşmek' deyiminin anlamı aşağıdakilerden hangisidir?", secenekler: ["A) Fiziksel olarak yüksekten düşmek", "B) Eskiden gösterilen ilgiyi, sevgiyi yitirmek", "C) Dikkatini dağıtıp hata yapmak", "D) Bir konuda başarısız olmak"], dogru: 1 }
-        ],
-        matematik: [
-            { soru: "1. İşlem önceliği: 24 / (3 - 1) + 5 x 2 ifadesinin sonucu kaçtır?", secenekler: ["A) 18", "B) 22", "C) 14", "D) 20"], dogru: 1 },
-            { soru: "2. x = 4 için 3x² - 2x + 5 cebirsel ifadesinin değeri kaçtır?", secenekler: ["A) 41", "B) 45", "C) 37", "D) 53"], dogru: 0 }
-        ],
-        tarih: [
-            { soru: "1. İslamiyet öncesi Türk devletlerinde 'Kurultay' adı verilen meclisin diğer adı aşağıdakilerden hangisidir?", secenekler: ["A) Toy veya Kengeş", "B) Buyruk", "C) Ataman", "D) Tigin"], dogru: 0 },
-            { soru: "2. Mustafa Kemal Atatürk, Kurtuluş Savaşı'nı resmen başlatmak amacıyla hangi tarihte Samsun'a ayak basmıştır?", secenekler: ["A) 23 Nisan 1920", "B) 19 Mayıs 1919", "C) 30 Ağustos 1922", "D) 29 Ekim 1923"], dogru: 1 }
-        ],
-        cografya: [
-            { soru: "1. Türkiye'nin en yüksek dağı olan Ağrı Dağı, hangi coğrafi bölgemizin sınırları içerisinde yer alır?", secenekler: ["A) İç Anadolu Bölgesi", "B) Doğu Anadolu Bölgesi", "C) Karadeniz Bölgesi", "D) Güneydoğu Anadolu Bölgesi"], dogru: 1 },
-            { soru: "2. Karadeniz ikliminin karakteristik bitki örtüsü aşağıdakilerden hangisidir?", secenekler: ["A) Bozkır (Step)", "B) Maki", "C) Geniş ve İğne Yapraklı Ormanlar", "D) Tundra"], dogru: 2 }
-        ],
-        vatandaslik: [
-            { soru: "1. 1982 Anayasası'na göre Türkiye Cumhuriyeti'nde milletvekili seçilme yeterliliği yaşı kaç olarak belirlenmiştir?", secenekler: ["A) 18", "B) 21", "C) 25", "D) 30"], dogru: 0 },
-            { soru: "2. Türkiye Cumhuriyeti'nde yasama yetkisi kime aittir?", secenekler: ["A) Cumhurbaşkanlığı", "B) Türkiye Büyük Millet Meclisi (TBMM)", "C) Bakanlar Kurulu", "D) Anayasa Mahkemesi"], dogru: 1 }
-        ]
-    };
-
-    let aktifDers = "";
-    let aktifSorular = [];
-    let aktifIndex = 0;
-    let kullaniciCevaplari = {};
-
-    function dersSec(dersKodu) {
-        aktifDers = dersKodu;
-        document.getElementById("secilenDersBaslik").innerText = "Seçilen Ders: " + dersKodu.toUpperCase();
-        document.getElementById("menuScreen").classList.remove("active-screen");
-        document.getElementById("setupScreen").classList.add("active-screen");
+    function suankiTarihSaatGetir() {
+        const simdi = new Date();
+        const yil = simdi.getFullYear();
+        const ay = String(simdi.getMonth() + 1).padStart(2, '0');
+        const gun = String(simdi.getDate()).padStart(2, '0');
+        const saat = String(simdi.getHours()).padStart(2, '0');
+        const dakika = String(simdi.getMinutes()).padStart(2, '0');
+        return `${yil}-${ay}-${gun}T${saat}:${dakika}`;
     }
 
-    function testiBaslat() {
-        let istenenSayi = parseInt(document.getElementById("soruSayisiInput").value);
-        let tumSorular = [...soruHavuzu[aktifDers]];
-        
-        tumSorular.sort(() => Math.random() - 0.5);
-        aktifSorular = tumSorular.slice(0, Math.min(istenenSayi, tumSorular.length));
-        
-        aktifIndex = 0;
-        kullaniciCevaplari = {};
-        
-        document.getElementById("setupScreen").classList.remove("active-screen");
-        document.getElementById("quizScreen").classList.add("active-screen");
-        
-        soruyuEkranaBas();
+    function setGirisTuru(tur) {
+        secilenGirisTuru = tur;
+        const btnArac = document.getElementById('btnArac');
+        const btnYaya = document.getElementById('btnYaya');
+        const plakaGroup = document.getElementById('plakaGroup');
+
+        if (tur === 'Araçlı Giriş') {
+            btnArac.classList.add('active');
+            btnYaya.classList.remove('active');
+            plakaGroup.classList.remove('hidden');
+        } else {
+            btnYaya.classList.add('active');
+            btnArac.classList.remove('active');
+            plakaGroup.classList.add('hidden');
+            document.getElementById('plaka').value = '';
+        }
     }
 
-    function soruyuEkranaBas() {
-        if (aktifSorular.length === 0) return;
+    function setCinsiyet(cinsiyet) {
+        secilenCinsiyet = cinsiyet;
+        const btnErkek = document.getElementById('btnErkek');
+        const btnKadin = document.getElementById('btnKadin');
 
-        const s = aktifSorular[aktifIndex];
-        document.getElementById("bilgiKismi").innerText = `Ders: ${aktifDers.toUpperCase()} | Soru ${aktifIndex + 1} / ${aktifSorular.length}`;
-        document.getElementById("soruMetni").innerText = s.soru;
-        document.getElementById("soruSayac").innerText = `${aktifIndex + 1} / ${aktifSorular.length}`;
+        if (cinsiyet === 'Erkek') {
+            btnErkek.classList.add('active');
+            btnKadin.classList.remove('active');
+        } else {
+            btnKadin.classList.add('active');
+            btnErkek.classList.remove('active');
+        }
+    }
 
-        const seceneklerAlani = document.getElementById("seceneklerAlani");
-        seceneklerAlani.innerHTML = "";
+    function setZiyaretSebebi(element, sebep) {
+        secilenSebep = sebep;
+        document.querySelectorAll('.radio-item').forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+    }
 
-        s.secenekler.forEach((secenek, i) => {
-            const btn = document.createElement("button");
-            btn.innerText = secenek;
-            btn.onclick = () => cevapSec(i, s.dogru, btn, seceneklerAlani);
+    function sirketBasvurusuGonder() {
+        const sirketAdi = document.getElementById('basvuruSirket').value.trim();
+        const yetkili = document.getElementById('basvuruYetkili').value.trim();
+        const telefon = document.getElementById('basvuruTel').value.trim();
 
-            if (kullaniciCevaplari[aktifIndex] !== undefined) {
-                btn.disabled = true;
-                if (i === s.dogru) {
-                    btn.classList.add("correct");
-                } else if (i === kullaniciCevaplari[aktifIndex]) {
-                    btn.classList.add("wrong");
+        if (!sirketAdi || !yetkili || !telefon) {
+            alert("Lütfen tüm alanları doldurun!");
+            return;
+        }
+
+        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
+        istekler.push({
+            id: Date.now(),
+            sirketAdi: sirketAdi,
+            yetkili: yetkili,
+            telefon: telefon,
+            durum: 'Onay Bekliyor',
+            tarih: new Date().toLocaleDateString('tr-TR')
+        });
+        localStorage.setItem('sirketIstekleri', JSON.stringify(istekler));
+
+        document.getElementById('basvuruSirket').value = '';
+        document.getElementById('basvuruYetkili').value = '';
+        document.getElementById('basvuruTel').value = '';
+
+        alert("Başvurunuz gönderildi! Yönetici onayladığında bu bilgileri yukarıdaki giriş alanına yazarak sisteme girebilirsiniz.");
+    }
+
+    function sirketGirisYap() {
+        const sirketAdi = document.getElementById('girisSirketAdi').value.trim();
+        const yetkiliAdi = document.getElementById('girisYetkiliAdi').value.trim();
+        const telefon = document.getElementById('girisTelefon').value.trim();
+
+        if (!sirketAdi || !yetkiliAdi || !telefon) {
+            alert("Lütfen giriş için Şirket Adı, Yetkili Adı ve Telefon numaranızı yazın!");
+            return;
+        }
+
+        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
+        let bulunan = istekler.find(r => 
+            r.sirketAdi.toLowerCase() === sirketAdi.toLowerCase() && 
+            r.yetkili.toLowerCase() === yetkiliAdi.toLowerCase() && 
+            r.telefon === telefon
+        );
+
+        if (bulunan) {
+            if (bulunan.durum === 'Onaylandı') {
+                document.getElementById('homeScreen').classList.add('hidden');
+                document.getElementById('formScreen').classList.remove('hidden');
+                document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
+                alert("Giriş başarılı! Hoş geldiniz.");
+            } else if (bulunan.durum === 'Engellendi') {
+                alert("Üzgünüz, başvurunuz yönetici tarafından engellenmiştir.");
+            } else {
+                alert("Başvurunuz henüz onay bekliyor. Lütfen yöneticinin onaylamasını bekleyin.");
+            }
+        } else {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('formScreen').classList.remove('hidden');
+            document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
+            alert("Giriş başarılı! Hoş geldiniz.");
+        }
+    }
+
+    function yoneticiGirisYap() {
+        const girilenSifre = document.getElementById('yoneticiSifre').value.trim();
+        if (girilenSifre === "Zeynep1011") {
+            document.getElementById('yoneticiSifre').value = '';
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('adminPanelScreen').classList.remove('hidden');
+            yoneticiIstekleriniGoster();
+        } else {
+            alert("Hatalı yönetici şifresi!");
+        }
+    }
+
+    function yoneticiIstekleriniGoster() {
+        const container = document.getElementById('pendingRequestsList');
+        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
+
+        if (istekler.length === 0) {
+            container.innerHTML = '<div class="empty-message">Henüz gelen başvuru bulunmuyor.</div>';
+            return;
+        }
+
+        let html = '';
+        istekler.forEach(req => {
+            let durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : 'request-card';
+            let engelleKaldirBtn = req.durum === 'Engellendi' 
+                ? `<button class="btn-success" onclick="durumDegistir(${req.id}, 'Onay Bekliyor')">Engeli Kaldır</button>`
+                : `<button class="btn-danger" onclick="durumDegistir(${req.id}, 'Engellendi')">Engelle</button>`;
+
+            html += `
+                <div class="${durumClass}">
+                    <p><strong>İşletme:</strong> ${req.sirketAdi}</p>
+                    <p><strong>Yetkili:</strong> ${req.yetkili}</p>
+                    <p><strong>Telefon:</strong> ${req.telefon}</p>
+                    <p><strong>Durum:</strong> <span style="font-weight:bold; color:${req.durum==='Engellendi'?'red':(req.durum==='Onaylandı'?'green':'orange')}">${req.durum}</span></p>
+                    <div class="card-actions">
+                        <span class="time-badge">📅 ${req.tarih}</span>
+                        <div style="display: flex; gap: 5px;">
+                            ${req.durum !== 'Onaylandı' ? `<button class="btn-success" onclick="durumDegistir(${req.id}, 'Onaylandı')">Onayla</button>` : ''}
+                            ${engelleKaldirBtn}
+                            <button class="btn-danger" style="background:#6c757d;" onclick="basvuruyuSil(${req.id})">Sil</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function durumDegistir(id, yeniDurum) {
+        let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
+        istekler = istekler.map(r => {
+            if (r.id === id) r.durum = yeniDurum;
+            return r;
+        });
+        localStorage.setItem('sirketIstekleri', JSON.stringify(istekler));
+        yoneticiIstekleriniGoster();
+        alert("Başvuru durumu '" + yeniDurum + "' olarak güncellendi!");
+    }
+
+    function basvuruyuSil(id) {
+        if (confirm("Bu başvuruyu silmek istediğinize emin misiniz?")) {
+            let istekler = JSON.parse(localStorage.getItem('sirketIstekleri')) || [];
+            istekler = istekler.filter(r => r.id !== id);
+            localStorage.setItem('sirketIstekleri', JSON.stringify(istekler));
+            yoneticiIstekleriniGoster();
+        }
+    }
+
+    function anaEkranaDon() {
+        document.getElementById('adminPanelScreen').classList.add('hidden');
+        document.getElementById('formScreen').classList.add('hidden');
+        document.getElementById('archiveScreen').classList.add('hidden');
+        document.getElementById('homeScreen').classList.remove('hidden');
+    }
+
+    function openArchive() {
+        document.getElementById('formScreen').classList.add('hidden');
+        document.getElementById('archiveScreen').classList.remove('hidden');
+        listeyiGoster();
+    }
+
+    function yeniKayitFormuAc() {
+        document.getElementById('archiveScreen').classList.add('hidden');
+        document.getElementById('formScreen').classList.remove('hidden');
+        formuSifirla();
+    }
+
+    function formuSifirla() {
+        document.getElementById('duzenlenenId').value = '';
+        document.getElementById('formTitle').innerText = "GÜVENLİK SİSTEMİ (Yeni Kayıt)";
+        document.getElementById('kaydetGuncelleBtn').innerText = "KAYDET VE DOSYAYA EKLE";
+        document.getElementById('plaka').value = '';
+        document.getElementById('adSoyad').value = '';
+        document.getElementById('tcNo').value = '';
+        document.getElementById('telefon').value = '';
+        document.getElementById('ziyaretEdilen').value = '';
+        document.getElementById('kimlikFoto').value = '';
+        document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
+        document.getElementById('cikisTarihSaat').value = '';
+        setGirisTuru('Araçlı Giriş');
+        setCinsiyet('Erkek');
+    }
+
+    function kaydetZiyaretci() {
+        const duzenlenenId = document.getElementById('duzenlenenId').value;
+        const plaka = document.getElementById('plaka').value.trim();
+        const adSoyad = document.getElementById('adSoyad').value.trim();
+        const tcNo = document.getElementById('tcNo').value.trim();
+        const telefon = document.getElementById('telefon').value.trim();
+        const girisTarih = document.getElementById('girisTarihSaat').value;
+        const cikisTarih = document.getElementById('cikisTarihSaat').value;
+        const ziyaretEdilen = document.getElementById('ziyaretEdilen').value.trim();
+        const fotoInput = document.getElementById('kimlikFoto');
+
+        if (!adSoyad || !tcNo) {
+            alert("Lütfen 'Adı Soyadı' ve 'TC Kimlik Numarası' alanlarını doldurun!");
+            return;
+        }
+
+        if (fotoInput.files && fotoInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, secilenCinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, e.target.result);
+            };
+            reader.readAsDataURL(fotoInput.files[0]);
+        } else {
+            let eskiFoto = null;
+            if (duzenlenenId) {
+                let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
+                let eskiKayit = kayitlar.find(k => k.id == duzenlenenId);
+                if (eskiKayit) eskiFoto = eskiKayit.foto;
+            }
+            veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, secilenCinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFoto);
+        }
+    }
+
+    function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, cinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoData) {
+        let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
+
+        function formatTarih(tarihStr) {
+            if (!tarihStr) return 'Belirtilmedi';
+            let d = new Date(tarihStr);
+            return d.toLocaleString('tr-TR', {dateStyle: 'short', timeStyle: 'short'});
+        }
+
+        const formatGiris = formatTarih(girisTarih);
+        const formatCikis = formatTarih(cikisTarih);
+
+        if (duzenlenenId) {
+            kayitlar = kayitlar.map(k => {
+                if (k.id == duzenlenenId) {
+                    return {
+                        ...k,
+                        girisTuru: secilenGirisTuru,
+                        plaka: secilenGirisTuru === 'Araçlı Giriş' ? (plaka || 'Plaka Girilmedi') : 'Yaya Girişi',
+                        adSoyad: adSoyad,
+                        cinsiyet: cinsiyet,
+                        tcNo: tcNo,
+                        telefon: telefon || 'Belirtilmemiş',
+                        girisTarihSaat: formatGiris,
+                        cikisTarihSaat: formatCikis,
+                        sebep: secilenSebep,
+                        ziyaretEdilen: ziyaretEdilen || 'Belirtilmemiş',
+                        foto: fotoData || k.foto
+                    };
                 }
-            }
-
-            seceneklerAlani.appendChild(btn);
-        });
-    }
-
-    function cevapSec(secilenIndex, dogruIndex, secilenBtn, parentDiv) {
-        if (kullaniciCevaplari[aktifIndex] !== undefined) return;
-
-        kullaniciCevaplari[aktifIndex] = secilenIndex;
-        const butonlar = parentDiv.getElementsByTagName("button");
-
-        if (secilenIndex === dogruIndex) {
-            secilenBtn.classList.add("correct");
+                return k;
+            });
+            alert("Kayıt başarıyla güncellendi!");
         } else {
-            secilenBtn.classList.add("wrong");
-            butonlar[dogruIndex].classList.add("correct");
+            const yeniKayit = {
+                id: Date.now(),
+                girisTuru: secilenGirisTuru,
+                plaka: secilenGirisTuru === 'Araçlı Giriş' ? (plaka || 'Plaka Girilmedi') : 'Yaya Girişi',
+                adSoyad: adSoyad,
+                cinsiyet: cinsiyet,
+                tcNo: tcNo,
+                telefon: telefon || 'Belirtilmemiş',
+                girisTarihSaat: formatGiris,
+                cikisTarihSaat: formatCikis,
+                sebep: secilenSebep,
+                ziyaretEdilen: ziyaretEdilen || 'Belirtilmemiş',
+                foto: fotoData
+            };
+            kayitlar.unshift(yeniKayit);
+            alert("Kayıt başarıyla dosyaya eklendi!");
         }
 
-        for (let b of butonlar) {
-            b.disabled = true;
-        }
+        localStorage.setItem('ziyaretciArsivi', JSON.stringify(kayitlar));
+        formuSifirla();
+        openArchive();
     }
 
-    function sonrakiSoru() {
-        if (aktifIndex < aktifSorular.length - 1) {
-            aktifIndex++;
-            soruyuEkranaBas();
-        } else {
-            sonuclariGoster();
-        }
-    }
+    function kaydiDuzenle(id) {
+        let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
+        let k = kayitlar.find(item => item.id == id);
+        if (!k) return;
 
-    function oncekiSoru() {
-        if (aktifIndex > 0) {
-            aktifIndex--;
-            soruyuEkranaBas();
-        }
-    }
-
-    function sonuclariGoster() {
-        let dogruSayisi = 0;
-        let yanlisSayisi = 0;
+        document.getElementById('duzenlenenId').value = k.id;
+        document.getElementById('formTitle').innerText = "KAYDI DÜZENLE";
+        document.getElementById('kaydetGuncelleBtn').innerText = "DEĞİŞİKLİKLERİ GÜNCELLE";
+        document.getElementById('adSoyad').value = k.adSoyad;
+        document.getElementById('tcNo').value = k.tcNo;
+        document.getElementById('telefon').value = k.telefon !== 'Belirtilmemiş' ? k.telefon : '';
+        document.getElementById('ziyaretEdilen').value = k.ziyaretEdilen !== 'Belirtilmemiş' ? k.ziyaretEdilen : '';
         
-        aktifSorular.forEach((s, idx) => {
-            if (kullaniciCevaplari[idx] === s.dogru) {
-                dogruSayisi++;
-            } else if (kullaniciCevaplari[idx] !== undefined) {
-                yanlisSayisi++;
-            }
-        });
+        if (k.girisTuru === 'Araçlı Giriş') {
+            setGirisTuru('Araçlı Giriş');
+            document.getElementById('plaka').value = k.plaka !== 'Plaka Girilmedi' ? k.plaka : '';
+        } else {
+            setGirisTuru('Yaya Girişi');
+        }
 
-        let toplamSoru = aktifSorular.length;
-        let puan = Math.round((dogruSayisi / toplamSoru) * 100);
+        setCinsiyet(k.cinsiyet);
 
-        document.getElementById("istatistikMetin").innerHTML = `Doğru: <b style="color:#22c55e;">${dogruSayisi}</b> | Yanlış: <b style="color:#ef4444;">${yanlisSayisi}</b> | Toplam: ${toplamSoru} Soru`;
-        document.getElementById("puanGosterge").innerText = `${puan} Puan`;
-
-        document.getElementById("quizScreen").classList.remove("active-screen");
-        document.getElementById("resultScreen").classList.add("active-screen");
+        document.getElementById('archiveScreen').classList.add('hidden');
+        document.getElementById('formScreen').classList.remove('hidden');
     }
 
-    function menuyeDon() {
-        document.getElementById("setupScreen").classList.remove("active-screen");
-        document.getElementById("quizScreen").classList.remove("active-screen");
-        document.getElementById("resultScreen").classList.remove("active-screen");
-        document.getElementById("menuScreen").classList.add("active-screen");
+    function listeyiGoster(filtreMetni = "") {
+        const listContainer = document.getElementById('visitorList');
+        let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
+
+        if (kayitlar.length === 0) {
+            listContainer.innerHTML = '<div class="empty-message">Dosyada henüz kayıt bulunmuyor.</div>';
+            return;
+        }
+
+        if (filtreMetni) {
+            const aranan = filtreMetni.toLowerCase();
+            kayitlar = kayitlar.filter(k => 
+                k.tcNo.toLowerCase().includes(aranan) || 
+                k.plaka.toLowerCase().includes(aranan) ||
+                k.adSoyad.toLowerCase().includes(aranan)
+            );
+        }
+
+        if (kayitlar.length === 0) {
+            listContainer.innerHTML = '<div class="empty-message">Aradığınız kriterlere uygun kayıt bulunamadı.</div>';
+            return;
+        }
+
+        let html = '';
+        kayitlar.forEach(k => {
+            let fotoHtml = k.foto ? `<br><img src="${k.foto}" class="id-photo-preview">` : '';
+            html += `
+                <div class="visitor-card">
+                    <p><strong>Ad Soyad:</strong> ${k.adSoyad} (${k.cinsiyet})</p>
+                    <p><strong>TC No:</strong> ${k.tcNo} | <strong>Tel:</strong> ${k.telefon}</p>
+                    <p><strong>Giriş Türü:</strong> ${k.girisTuru} (${k.plaka})</p>
+                    <p><strong>Giriş:</strong> ${k.girisTarihSaat || 'Belirtilmedi'}</p>
+                    <p><strong>Çıkış:</strong> ${k.cikisTarihSaat || 'Belirtilmedi'}</p>
+                    <p><strong>Sebep:</strong> ${k.sebep} → <strong>Gidilen:</strong> ${k.ziyaretEdilen}</p>
+                    ${fotoHtml}
+                    <div class="card-actions">
+                        <span class="time-badge">🕒 Kayıt Arşivi</span>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn-warning" onclick="kaydiDuzenle(${k.id})">Düzenle</button>
+                            <button class="btn-danger" onclick="kaydiSil(${k.id})">Sil</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        listContainer.innerHTML = html;
+    }
+
+    function aramaYap() {
+        const arananDeger = document.getElementById('searchInput').value;
+        listeyiGoster(arananDeger);
+    }
+
+    function kaydiSil(id) {
+        if (confirm("Bu kaydı dosyadan silmek istediğinize emin misiniz?")) {
+            let kayitlar = JSON.parse(localStorage.getItem('ziyaretciArsivi')) || [];
+            kayitlar = kayitlar.filter(k => k.id !== id);
+            localStorage.setItem('ziyaretciArsivi', JSON.stringify(kayitlar));
+            listeyiGoster(document.getElementById('searchInput').value);
+        }
     }
 </script>
 
