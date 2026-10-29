@@ -88,7 +88,7 @@
             color: #495057;
         }
 
-        input[type="text"], input[type="tel"], input[type="password"], input[type="file"], input[type="datetime-local"] {
+        input[type="text"], input[type="tel"], input[type="password"], input[type="file"], input[type="datetime-local"], select {
             width: 100%;
             padding: 10px 12px;
             border: 1px solid var(--border-color);
@@ -96,9 +96,10 @@
             font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
+            background: #fff;
         }
 
-        input:focus {
+        input:focus, select:focus {
             border-color: var(--primary-color);
         }
 
@@ -269,12 +270,61 @@
             color: #888;
         }
 
+        .photo-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
         .id-photo-preview {
             max-width: 90px;
             max-height: 60px;
             border-radius: 4px;
-            margin-top: 4px;
             border: 1px solid #ddd;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .id-photo-preview:hover {
+            transform: scale(1.05);
+        }
+
+        /* Fotoğrafı Büyütme ve İndirme Modalı (Lightbox) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 75%;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: #fff;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         .hidden {
@@ -387,9 +437,25 @@
             <input type="text" id="plaka" placeholder="Örn: 34 ABC 123">
         </div>
 
+        <!-- Kamera Tercihi -->
         <div class="form-group">
-            <label>Kimlik Fotoğrafı Çek / Yükle</label>
-            <input type="file" id="kimlikFoto" accept="image/*" capture="environment">
+            <label>Kamera / Çekim Tercihi</label>
+            <select id="kameraTercihi" onchange="kameraAyariniGuncelle()">
+                <option value="environment">📷 Arka Kamera (Ana Kamera)</option>
+                <option value="user">🤳 Ön Kamera (Selfie / Yüz)</option>
+            </select>
+        </div>
+
+        <!-- Kimlik Ön Yüzü -->
+        <div class="form-group">
+            <label>🪪 Kimlik / Belge ÖN Yüzü (İsteğe Bağlı)</label>
+            <input type="file" id="kimlikFotoOn" accept="image/*" capture="environment">
+        </div>
+
+        <!-- Kimlik Arka Yüzü -->
+        <div class="form-group">
+            <label>🪪 Kimlik / Belge ARKA Yüzü (İsteğe Bağlı)</label>
+            <input type="file" id="kimlikFotoArka" accept="image/*" capture="environment">
         </div>
 
         <div class="form-group">
@@ -458,6 +524,16 @@
     </div>
 </div>
 
+<!-- Fotoğraf Büyütme ve İndirme Modalı -->
+<div id="photoModal" class="modal">
+    <span class="modal-close" onclick="resimModaliniKapat()">&times;</span>
+    <img class="modal-content" id="modalImage">
+    <div class="modal-buttons">
+        <button class="btn-success" style="padding: 10px 20px; font-size: 14px;" onclick="resmiTelefonaIndir()">📥 Resmi Telefona Kaydet</button>
+        <button class="nav-btn" style="padding: 10px 20px; background: #dc3545;" onclick="resimModaliniKapat()">Kapat</button>
+    </div>
+</div>
+
 <script>
     // Google Firebase Veritabanı Adresi
     const databaseURL = "https://guvenliksistemi-default-rtdb.firebaseio.com/";
@@ -465,11 +541,46 @@
     var secilenGirisTuru = "Araçlı Giriş";
     var secilenCinsiyet = "Erkek";
     var secilenSebep = "Misafir / Ziyaretçi";
+    var aktifResimSrc = "";
 
-    // Sayfa açıldığında sistem durumu kontrolü
     window.onload = async function() {
         await sistemKilitKontrolu();
+        kameraAyariniGuncelle();
     };
+
+    function kameraAyariniGuncelle() {
+        var tercih = document.getElementById('kameraTercihi').value;
+        var fotoOn = document.getElementById('kimlikFotoOn');
+        var fotoArka = document.getElementById('kimlikFotoArka');
+        fotoOn.setAttribute('capture', tercih);
+        fotoArka.setAttribute('capture', tercih);
+    }
+
+    function resmiBuyut(fotoSrc) {
+        var modal = document.getElementById('photoModal');
+        var modalImg = document.getElementById('modalImage');
+        
+        aktifResimSrc = fotoSrc; // İndirmek için hafızada tutuyoruz
+        modal.style.display = "flex";
+        modalImg.src = fotoSrc;
+    }
+
+    // Garantili İndirme Fonksiyonu
+    function resmiTelefonaIndir() {
+        if (!aktifResimSrc) return;
+
+        var a = document.createElement('a');
+        a.href = aktifResimSrc;
+        a.download = 'kimlik_belge_' + Date.now() + '.jpg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function resimModaliniKapat() {
+        document.getElementById('photoModal').style.display = "none";
+        aktifResimSrc = "";
+    }
 
     async function sistemKilitKontrolu() {
         const url = `${databaseURL}/sistem_durumu.json`;
@@ -495,13 +606,11 @@
         }
     }
 
-    // Google Firebase'den Başvuruları Çekme
     async function getFirebaseVeri(yol) {
         try {
             let response = await fetch(`${databaseURL}/${yol}.json`);
             let data = await response.json();
             if (!data) return [];
-            // Firebase nesne olarak dönerse diziye çevir
             if (!Array.isArray(data)) {
                 return Object.keys(data).map(key => ({ ...data[key], firebaseKey: key }));
             }
@@ -512,7 +621,6 @@
         }
     }
 
-    // Google Firebase'e Veri Kaydetme / Güncelleme
     async function firebaseKaydet(yol, veriListesi) {
         try {
             await fetch(`${databaseURL}/${yol}.json`, {
@@ -752,7 +860,8 @@
         document.getElementById('tcNo').value = '';
         document.getElementById('telefon').value = '';
         document.getElementById('ziyaretEdilen').value = '';
-        document.getElementById('kimlikFoto').value = '';
+        document.getElementById('kimlikFotoOn').value = '';
+        document.getElementById('kimlikFotoArka').value = '';
         document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
         document.getElementById('cikisTarihSaat').value = '';
         setGirisTuru('Araçlı Giriş');
@@ -771,57 +880,78 @@
         var girisTarih = document.getElementById('girisTarihSaat').value;
         var cikisTarih = document.getElementById('cikisTarihSaat').value;
         var ziyaretEdilen = document.getElementById('ziyaretEdilen').value.trim();
-        var fotoInput = document.getElementById('kimlikFoto');
+        
+        var fotoInputOn = document.getElementById('kimlikFotoOn');
+        var fotoInputArka = document.getElementById('kimlikFotoArka');
 
         if (!adSoyad || !tcNo) {
             alert("Lütfen 'Adı Soyadı' ve 'TC Kimlik Numarası' alanlarını doldurun!");
             return;
         }
 
-        if (fotoInput.files && fotoInput.files[0]) {
-            var reader = new FileReader();
-            reader.onload = async function(e) {
-                await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, secilenCinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, e.target.result);
-            };
-            reader.readAsDataURL(fotoInput.files[0]);
-        } else {
-            var eskiFoto = null;
-            var arsiv = await getFirebaseVeri('arsiv');
-            if (duzenlenenId) {
-                for (var i = 0; i < arsiv.length; i++) {
-                    if (arsiv[i] && arsiv[i].id == duzenlenenId) {
-                        eskiFoto = arsiv[i].foto;
-                        break;
-                    }
+        var arsiv = await getFirebaseVeri('arsiv');
+        var eskiFotoOn = null;
+        var eskiFotoArka = null;
+
+        if (duzenlenenId) {
+            for (var i = 0; i < arsiv.length; i++) {
+                if (arsiv[i] && arsiv[i].id == duzenlenenId) {
+                    eskiFotoOn = arsiv[i].fotoOn;
+                    eskiFotoArka = arsiv[i].fotoArka;
+                    break;
                 }
             }
-            await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, secilenCinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFoto);
+        }
+
+        if (fotoInputOn.files && fotoInputOn.files[0]) {
+            var readerOn = new FileReader();
+            readerOn.onload = async function(eOn) {
+                var sonucOn = eOn.target.result;
+                if (fotoInputArka.files && fotoInputArka.files[0]) {
+                    var readerArka = new FileReader();
+                    readerArka.onload = async function(eArka) {
+                        await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eArka.target.result);
+                    };
+                    readerArka.readAsDataURL(fotoInputArka.files[0]);
+                } else {
+                    await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eskiFotoArka);
+                }
+            };
+            readerOn.readAsDataURL(fotoInputOn.files[0]);
+        } else {
+            if (fotoInputArka.files && fotoInputArka.files[0]) {
+                var readerArka = new FileReader();
+                readerArka.onload = async function(eArka) {
+                    await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eArka.target.result);
+                };
+                readerArka.readAsDataURL(fotoInputArka.files[0]);
+            } else {
+                await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eskiFotoArka);
+            }
         }
     }
 
-    async function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, cinsiyet, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoData) {
+    async function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoOnData, fotoArkaData) {
         function formatTarih(tarihStr) {
             if (!tarihStr) return 'Belirtilmedi';
             var d = new Date(tarihStr);
             return d.toLocaleString('tr-TR', {dateStyle: 'short', timeStyle: 'short'});
         }
 
-        var formatGiris = formatTarih(girisTarih);
-        var formatCikis = formatTarih(cikisTarih);
-
         var kayitVerisi = {
             id: duzenlenenId || ('arsiv_' + Date.now()),
             girisTuru: secilenGirisTuru,
             plaka: secilenGirisTuru === 'Araçlı Giriş' ? (plaka || 'Plaka Girilmedi') : 'Yaya Girişi',
             adSoyad: adSoyad,
-            cinsiyet: cinsiyet,
+            cinsiyet: secilenCinsiyet,
             tcNo: tcNo,
             telefon: telefon || 'Belirtilmemiş',
-            girisTarihSaat: formatGiris,
-            cikisTarihSaat: formatCikis,
+            girisTarihSaat: formatTarih(girisTarih),
+            cikisTarihSaat: formatTarih(cikisTarih),
             sebep: secilenSebep,
             ziyaretEdilen: ziyaretEdilen || 'Belirtilmemiş',
-            foto: fotoData || null
+            fotoOn: fotoOnData || null,
+            fotoArka: fotoArkaData || null
         };
 
         var arsiv = await getFirebaseVeri('arsiv');
@@ -909,7 +1039,15 @@
         for (var j = 0; j < kayitlar.length; j++) {
             var k = kayitlar[j];
             if (!k) continue;
-            var fotoHtml = k.foto ? '<br><img src="' + k.foto + '" class="id-photo-preview">' : '';
+            
+            var fotoHtml = '<div class="photo-container">';
+            if (k.fotoOn) {
+                fotoHtml += '<div style="text-align:center;"><span style="font-size:10px; color:#555;">Ön Yüz</span><br><img src="' + k.fotoOn + '" class="id-photo-preview" onclick="resmiBuyut(\'' + k.fotoOn + '\')"></div>';
+            }
+            if (k.fotoArka) {
+                fotoHtml += '<div style="text-align:center;"><span style="font-size:10px; color:#555;">Arka Yüz</span><br><img src="' + k.fotoArka + '" class="id-photo-preview" onclick="resmiBuyut(\'' + k.fotoArka + '\')"></div>';
+            }
+            fotoHtml += '</div>';
 
             html += '<div class="visitor-card">' +
                 '<p><strong>Ad Soyad:</strong> ' + k.adSoyad + ' (' + k.cinsiyet + ')</p>' +
