@@ -1,29 +1,4 @@
 {
-  "istekler": [
-    {
-      "id": "istek_1793429149863",
-      "sirketAdi": "1",
-      "yetkili": "1",
-      "telefon": "1",
-      "durum": "Onaylandı",
-      "tarih": "31.10.2026"
-    }
-  ],
-  "arsiv": [
-    {
-      "id": "arsiv_1793429187973",
-      "girisTuru": "Araçlı Giriş",
-      "plaka": "Plaka Girilmedi",
-      "adSoyad": "Wh3uu3u3y3u",
-      "cinsiyet": "Erkek",
-      "tcNo": "73882828282",
-      "telefon": "Belirtilmemiş",
-      "girisTarihSaat": "31.10.2026 09:46",
-      "cikisTarihSaat": "Belirtilmedi",
-      "sebep": "Misafir / Ziyaretçi",
-      "ziyaretEdilen": "Belirtilmemiş",
-      "fotoOn": null,
-      "fotoArka": null
-    }
-  ]
+  "istekler": [],
+  "arsiv": []
 }
