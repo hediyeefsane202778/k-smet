@@ -1,4 +1,13 @@
 {
-  "istekler": [],
+  "istekler": [
+    {
+      "id": "istek_1793429149863",
+      "sirketAdi": "1",
+      "yetkili": "1",
+      "telefon": "1",
+      "durum": "Onay Bekliyor",
+      "tarih": "31.10.2026"
+    }
+  ],
   "arsiv": []
 }
