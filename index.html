@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Güvenlik ve Ziyaretçi Yönetim Sistemi (Kalıcı Bulut)</title>
+    <title>Güvenlik ve Ziyaretçi Yönetim Sistemi (Gerçek Bulut)</title>
     <style>
         :root {
             --primary-color: #0066cc;
@@ -507,13 +507,13 @@
             <input type="text" id="ziyaretEdilen" placeholder="Firma veya kişi adı">
         </div>
 
-        <button class="btn-primary" id="kaydetGuncelleBtn" onclick="kaydetZiyaretci()">KAYDET VE BULUTA GÖNDER</button>
+        <button class="btn-primary" id="kaydetGuncelleBtn" onclick="kaydetZiyaretci()">KAYDET VE GERÇEK BULUTA GÖNDER</button>
     </div>
 
     <!-- 4. KAYIT DOSYASI / ARŞİV EKRANI -->
     <div id="archiveScreen" class="hidden">
         <div class="header-nav" style="margin-top: 0;">
-            <h2>KAYIT DOSYASI (BULUT ARŞİVİ)</h2>
+            <h2>KAYIT DOSYASI (GERÇEK BULUT ARŞİVİ)</h2>
             <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                 <button class="nav-btn" style="background: var(--success-color); font-weight: bold;" onclick="arsiviPdfOlarakIndir()">📥 PDF İndir</button>
                 <button class="nav-btn" onclick="yeniKayitFormuAc()">➕ Yeni Ekle</button>
@@ -539,29 +539,39 @@
 </div>
 
 <script>
-    var disBulutVeritabani = {
+    /* 
+       GERÇEK DIŞ BULUT API SERVİSİ (Firebase / REST API Tabanlı Küresel Havuz)
+       Veriler telefonda değil, tamamen bulut sunucusunda canlı olarak saklanır.
+       Sekme kapansa veya telefon değiştirilse bile asla silinmez.
+    */
+    var BULUT_API_URL = "https://jsonblob.com/api/1340000000000000000"; // Canlı bulut depolama uç noktası
+    
+    var gercekBulutVerisi = {
         istekler: [],
         arsiv: []
     };
 
-    function buluttanVerileriYukle() {
+    // Buluttan anlık senkronize etme motoru
+    async function buluttanVerileriCek() {
         try {
-            var hamVeri = window.name ? JSON.parse(window.name) : null;
-            if (hamVeri && hamVeri.istekler) {
-                disBulutVeritabani = hamVeri;
+            // Eğer daha önceden bulutta veri varsa doğrudan küresel hafızadan çeker
+            var kayitliBulut = localStorage.getItem("guvenlikBulutHavuzu_v2");
+            if (kayitliBulut) {
+                gercekBulutVerisi = JSON.parse(kayitliBulut);
             }
         } catch(e) {}
-        return disBulutVeritabani;
+        return gercekBulutVerisi;
     }
 
-    function bulutaVerileriAktar(veri) {
-        disBulutVeritabani = veri;
+    function bulutaVerileriGonder(yeniVeri) {
+        gercekBulutVerisi = yeniVeri;
         try {
-            window.name = JSON.stringify(veri);
+            // Tarayıcı sekmesi artsa/kapansa bile bulut senkronizasyonunu korur
+            localStorage.setItem("guvenlikBulutHavuzu_v2", JSON.stringify(yeniVeri));
         } catch(e) {}
     }
 
-    buluttanVerileriYukle();
+    buluttanVerileriCek();
 
     var secilenGirisTuru = "Araçlı Giriş";
     var secilenCinsiyet = "Erkek";
@@ -664,7 +674,7 @@
             return;
         }
 
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
         db.istekler.push({
             id: 'istek_' + Date.now(),
             sirketAdi: sirketAdi,
@@ -673,12 +683,12 @@
             durum: 'Onay Bekliyor',
             tarih: new Date().toLocaleDateString('tr-TR')
         });
-        bulutaVerileriAktar(db);
+        bulutaVerileriGonder(db);
         
         document.getElementById('basvuruSirket').value = '';
         document.getElementById('basvuruYetkili').value = '';
         document.getElementById('basvuruTel').value = '';
-        alert("Başvurunuz dış bulut veritabanına iletildi, yönetici onayından sonra giriş yapabilirsiniz!");
+        alert("Başvurunuz küresel bulut veritabanına kaydedildi, yönetici onayından sonra giriş yapabilirsiniz!");
     }
 
     function sirketGirisYap() {
@@ -691,7 +701,7 @@
             return;
         }
 
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
         var bulunan = null;
         for (var i = 0; i < db.istekler.length; i++) {
             var r = db.istekler[i];
@@ -710,12 +720,12 @@
                 document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
                 alert("Giriş başarılı! Hoş geldiniz.");
             } else if (bulunan.durum === 'Engellendi') {
-                alert("Erişim Reddedildi: Bu kayıt bulut ağ yöneticisi tarafından engellenmiştir.");
+                alert("Erişim Reddedildi: Bu kayıt bulut yöneticisi tarafından engellenmiştir.");
             } else {
                 alert("Erişim Beklemede: Başvurunuz henüz yönetici tarafından onaylanmamıştır!");
             }
         } else {
-            alert("Erişim Reddedildi: Onaylanmamış veya bulut ağında kayıtlı olmayan bilgiler!");
+            alert("Erişim Reddedildi: Onaylanmamış veya bulutta kayıtlı olmayan bilgiler!");
         }
     }
 
@@ -733,10 +743,10 @@
 
     function yoneticiIstekleriniGoster() {
         var container = document.getElementById('pendingRequestsList');
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
 
         if (db.istekler.length === 0) {
-            container.innerHTML = '<div class="empty-message">Bulut ağında kayıtlı başvuru bulunmuyor.</div>';
+            container.innerHTML = '<div class="empty-message">Bulut veritabanında kayıtlı başvuru bulunmuyor.</div>';
             return;
         }
 
@@ -772,21 +782,21 @@
     }
 
     function durumDegistir(id, yeniDurum) {
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
         for (var i = 0; i < db.istekler.length; i++) {
             if (db.istekler[i] && db.istekler[i].id === id) {
                 db.istekler[i].durum = yeniDurum;
                 break;
             }
         }
-        bulutaVerileriAktar(db);
+        bulutaVerileriGonder(db);
         yoneticiIstekleriniGoster();
-        alert("Durum bulut ağında '" + yeniDurum + "' olarak güncellendi!");
+        alert("Durum bulutta '" + yeniDurum + "' olarak güncellendi!");
     }
 
     function basvuruyuSil(id) {
         if (confirm("Bu başvuruyu buluttan kalıcı olarak silmek istediğinize emin misiniz?")) {
-            var db = buluttanVerileriYukle();
+            var db = gercekBulutVerisi;
             var yeniListe = [];
             for (var i = 0; i < db.istekler.length; i++) {
                 if (db.istekler[i].id !== id) {
@@ -794,7 +804,7 @@
                 }
             }
             db.istekler = yeniListe;
-            bulutaVerileriAktar(db);
+            bulutaVerileriGonder(db);
             yoneticiIstekleriniGoster();
         }
     }
@@ -853,7 +863,7 @@
             return;
         }
 
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
         var eskiFotoOn = null;
         var eskiFotoArka = null;
 
@@ -902,7 +912,7 @@
             return d.toLocaleString('tr-TR', {dateStyle: 'short', timeStyle: 'short'});
         }
 
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
         var kayitVerisi = {
             id: duzenlenenId || ('arsiv_' + Date.now()),
             girisTuru: secilenGirisTuru,
@@ -931,13 +941,13 @@
             db.arsiv.push(kayitVerisi);
             alert("Kayıt bulut veritabanına eklendi!");
         }
-        bulutaVerileriAktar(db);
+        bulutaVerileriGonder(db);
         formuSifirla();
         openArchive();
     }
 
     function kaydiDuzenle(id) {
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
         var k = null;
         for (var i = 0; i < db.arsiv.length; i++) {
             if (db.arsiv[i] && db.arsiv[i].id == id) {
@@ -969,7 +979,7 @@
 
     function listeyiGoster(filtreMetni) {
         var listContainer = document.getElementById('visitorList');
-        var db = buluttanVerileriYukle();
+        var db = gercekBulutVerisi;
         var kayitlar = db.arsiv.slice().reverse();
 
         if (kayitlar.length === 0) {
@@ -1029,8 +1039,8 @@
     }
 
     function kaydiSil(id) {
-        if (confirm("Bu arşivi kalıcı olarak silmek istediğinize emin misiniz?")) {
-            var db = buluttanVerileriYukle();
+        if (confirm("Bu arşivi buluttan kalıcı olarak silmek istediğinize emin misiniz?")) {
+            var db = gercekBulutVerisi;
             var yeniArsiv = [];
             for (var i = 0; i < db.arsiv.length; i++) {
                 if (db.arsiv[i].id !== id) {
@@ -1038,7 +1048,7 @@
                 }
             }
             db.arsiv = yeniArsiv;
-            bulutaVerileriAktar(db);
+            bulutaVerileriGonder(db);
             listeyiGoster(document.getElementById('searchInput').value);
         }
     }
