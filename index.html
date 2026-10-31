@@ -366,7 +366,7 @@
         <div class="section-box" style="border-left: 5px solid var(--primary-color);">
             <h3 style="font-size: 14px; color: var(--primary-color); margin-bottom: 8px;">İşletme / Şirket İşlemleri</h3>
             <div style="background: #e6f0fa; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
-                <label style="color: var(--primary-color); font-size: 12px;">Sisteme Giriş Yapın</label>
+                <label style="color: var(--primary-color); font-size: 12px;">Onaylandıktan Sonra Bilgilerinizle Giriş Yapın</label>
                 <div class="form-group" style="margin-top: 6px; margin-bottom: 8px;">
                     <input type="text" id="girisSirketAdi" placeholder="Şirket Adı" style="font-size: 13px; padding: 8px; margin-bottom: 5px;">
                     <input type="text" id="girisYetkiliAdi" placeholder="Yetkili Adı Soyadı" style="font-size: 13px; padding: 8px; margin-bottom: 5px;">
@@ -375,7 +375,7 @@
                 <button class="nav-btn" style="background:var(--primary-color); width: 100%; padding: 8px; font-weight: bold;" onclick="sirketGirisYap()">SİSTEME GİRİŞ YAP</button>
             </div>
 
-            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Yeni kayıt oluştur:</p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Yeni kayıt olmak için bilgilerinizi doldurup başvurun:</p>
             
             <div class="form-group">
                 <label>İşletme / Site Adı</label>
@@ -389,12 +389,12 @@
                 <label>İletişim Telefonu</label>
                 <input type="tel" id="basvuruTel" placeholder="05XX XXX XX XX">
             </div>
-            <button class="btn-primary" onclick="sirketBasvurusuGonder()" style="padding: 10px; font-size: 14px;">KAYIT OLUŞTUR</button>
+            <button class="btn-primary" onclick="sirketBasvurusuGonder()" style="padding: 10px; font-size: 14px;">BAŞVURU GÖNDER</button>
         </div>
 
         <div class="section-box" style="border-left: 5px solid #6c757d;">
             <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">🔒 Yönetici Giriş Paneli</h3>
-            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Yönetim paneli için şifrenizi girin.</p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Başvuruları yönetmek için şifrenizi girin.</p>
             
             <div class="form-group">
                 <label>Yönetici Şifresi</label>
@@ -411,7 +411,7 @@
             <button class="nav-btn" style="background:#dc3545;" onclick="anaEkranaDon()">🔒 Çıkış Yap</button>
         </div>
         <div class="section-box">
-            <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">📥 Kayıtlı İşletmeler</h3>
+            <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">📥 Gelen Başvurular (Onayla / Engelle)</h3>
             <div id="pendingRequestsList"></div>
         </div>
     </div>
@@ -539,7 +539,6 @@
 </div>
 
 <script>
-    // Bellek tabanlı geçici dizi (Telefon deposunu ASLA kullanmaz, tamamen ram/hafıza üstünden akar)
     var hafizaIstekleri = [];
     var hafizaArsivi = [];
 
@@ -649,13 +648,14 @@
             sirketAdi: sirketAdi,
             yetkili: yetkili,
             telefon: telefon,
+            durum: 'Onay Bekliyor',
             tarih: new Date().toLocaleDateString('tr-TR')
         });
         
         document.getElementById('basvuruSirket').value = '';
         document.getElementById('basvuruYetkili').value = '';
         document.getElementById('basvuruTel').value = '';
-        alert("Kayıt oluşturuldu!");
+        alert("Başvurunuz başarıyla gönderildi, yönetici onayından sonra giriş yapabilirsiniz!");
     }
 
     function sirketGirisYap() {
@@ -664,7 +664,7 @@
         var telefon = document.getElementById('girisTelefon').value.trim();
 
         if (!sirketAdi || !yetkiliAdi || !telefon) {
-            alert("Lütfen bilgileri eksiksiz yazın!");
+            alert("Lütfen Şirket Adı, Yetkili Adı ve Telefon numaranızı eksiksiz yazın!");
             return;
         }
 
@@ -680,12 +680,18 @@
         }
 
         if (bulunan) {
-            document.getElementById('homeScreen').classList.add('hidden');
-            document.getElementById('formScreen').classList.remove('hidden');
-            document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
-            alert("Giriş başarılı!");
+            if (bulunan.durum === 'Onaylandı') {
+                document.getElementById('homeScreen').classList.add('hidden');
+                document.getElementById('formScreen').classList.remove('hidden');
+                document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
+                alert("Giriş başarılı! Hoş geldiniz.");
+            } else if (bulunan.durum === 'Engellendi') {
+                alert("Erişim Reddedildi: Bu kayıt yönetici tarafından engellenmiştir.");
+            } else {
+                alert("Erişim Beklemede: Başvurunuz henüz yönetici tarafından onaylanmamıştır!");
+            }
         } else {
-            alert("Erişim Reddedildi: Bilgiler eşleşmedi!");
+            alert("Erişim Reddedildi: Onaylanmamış veya sistemde kayıtlı olmayan bilgiler!");
         }
     }
 
@@ -697,42 +703,70 @@
             document.getElementById('adminPanelScreen').classList.remove('hidden');
             yoneticiIstekleriniGoster();
         } else {
-            alert("Hatalı şifre!");
+            alert("Hatalı yönetici şifresi!");
         }
     }
 
     function yoneticiIstekleriniGoster() {
         var container = document.getElementById('pendingRequestsList');
         if (hafizaIstekleri.length === 0) {
-            container.innerHTML = '<div class="empty-message">Kayıt bulunmuyor.</div>';
+            container.innerHTML = '<div class="empty-message">Henüz gelen başvuru bulunmuyor.</div>';
             return;
         }
 
         var html = '';
         for (var i = 0; i < hafizaIstekleri.length; i++) {
             var req = hafizaIstekleri[i];
-            html += '<div class="request-card">' +
+            var durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : 'request-card';
+            
+            var engelleKaldirBtn = req.durum === 'Engellendi' 
+                ? '<button class="btn-success" onclick="durumDegistir(\'' + req.id + '\', \'Onay Bekliyor\')">Engeli Kaldır</button>'
+                : '<button class="btn-danger" onclick="durumDegistir(\'' + req.id + '\', \'Engellendi\')">Engelle</button>';
+
+            var onayBtn = req.durum !== 'Onaylandı' 
+                ? '<button class="btn-success" onclick="durumDegistir(\'' + req.id + '\', \'Onaylandı\')">Onayla</button>' 
+                : '<span style="color:green; font-weight:bold; font-size:12px;">✅ Onaylı</span>';
+
+            html += '<div class="' + durumClass + '">' +
                 '<p><strong>İşletme:</strong> ' + req.sirketAdi + '</p>' +
                 '<p><strong>Yetkili:</strong> ' + req.yetkili + '</p>' +
                 '<p><strong>Telefon:</strong> ' + req.telefon + '</p>' +
+                '<p><strong>Durum:</strong> <span style="font-weight:bold; color:' + (req.durum==='Engellendi'?'red':(req.durum==='Onaylandı'?'green':'orange')) + '">' + req.durum + '</span></p>' +
                 '<div class="card-actions">' +
                     '<span class="time-badge">📅 ' + req.tarih + '</span>' +
-                    '<button class="btn-danger" onclick="basvuruyuSil(\'' + req.id + '\')">Sil</button>' +
+                    '<div style="display: flex; gap: 5px;">' +
+                        onayBtn +
+                        engelleKaldirBtn +
+                        '<button class="btn-danger" style="background:#6c757d;" onclick="basvuruyuSil(\'' + req.id + '\')">Sil</button>' +
+                    '</div>' +
                 '</div>' +
             '</div>';
         }
         container.innerHTML = html;
     }
 
-    function basvuruyuSil(id) {
-        var yeniListe = [];
+    function durumDegistir(id, yeniDurum) {
         for (var i = 0; i < hafizaIstekleri.length; i++) {
-            if (hafizaIstekleri[i].id !== id) {
-                yeniListe.push(hafizaIstekleri[i]);
+            if (hafizaIstekleri[i] && hafizaIstekleri[i].id === id) {
+                hafizaIstekleri[i].durum = yeniDurum;
+                break;
             }
         }
-        hafizaIstekleri = yeniListe;
         yoneticiIstekleriniGoster();
+        alert("Durum '" + yeniDurum + "' olarak güncellendi!");
+    }
+
+    function basvuruyuSil(id) {
+        if (confirm("Bu başvuruyu silmek istediğinize emin misiniz?")) {
+            var yeniListe = [];
+            for (var i = 0; i < hafizaIstekleri.length; i++) {
+                if (hafizaIstekleri[i].id !== id) {
+                    yeniListe.push(hafizaIstekleri[i]);
+                }
+            }
+            hafizaIstekleri = yeniListe;
+            yoneticiIstekleriniGoster();
+        }
     }
 
     function anaEkranaDon() {
