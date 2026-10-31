@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Güvenlik ve Ziyaretçi Yönetim Sistemi (Gerçek Bulut)</title>
+    <title>Güvenlik ve Ziyaretçi Yönetim Sistemi (GitHub Bulut)</title>
     <style>
         :root {
             --primary-color: #0066cc;
@@ -507,13 +507,13 @@
             <input type="text" id="ziyaretEdilen" placeholder="Firma veya kişi adı">
         </div>
 
-        <button class="btn-primary" id="kaydetGuncelleBtn" onclick="kaydetZiyaretci()">KAYDET VE GERÇEK BULUTA GÖNDER</button>
+        <button class="btn-primary" id="kaydetGuncelleBtn" onclick="kaydetZiyaretci()">KAYDET VE GİT-HUB BULUTA GÖNDER</button>
     </div>
 
     <!-- 4. KAYIT DOSYASI / ARŞİV EKRANI -->
     <div id="archiveScreen" class="hidden">
         <div class="header-nav" style="margin-top: 0;">
-            <h2>KAYIT DOSYASI (GERÇEK BULUT ARŞİVİ)</h2>
+            <h2>KAYIT DOSYASI (GİT-HUB BULUT ARŞİVİ)</h2>
             <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                 <button class="nav-btn" style="background: var(--success-color); font-weight: bold;" onclick="arsiviPdfOlarakIndir()">📥 PDF İndir</button>
                 <button class="nav-btn" onclick="yeniKayitFormuAc()">➕ Yeni Ekle</button>
@@ -540,46 +540,88 @@
 
 <script>
     /* 
-       GERÇEK DIŞ BULUT API SERVİSİ (Firebase / REST API Tabanlı Küresel Havuz)
-       Veriler telefonda değil, tamamen bulut sunucusunda canlı olarak saklanır.
-       Sekme kapansa veya telefon değiştirilse bile asla silinmez.
+       GİT-HUB BULUT ENTEGRASYONU (GitHub Pages & GitHub REST API)
+       Kullanıcı Adı: hediyeefsane202778
+       Depo (Repo): k-smet
+       Veri Dosyası: veritabani.json
     */
-    var BULUT_API_URL = "https://jsonblob.com/api/1340000000000000000"; // Canlı bulut depolama uç noktası
-    
-    var gercekBulutVerisi = {
+    var GITHUB_KULLANICI = "hediyeefsane202778";
+    var GITHUB_REPO = "k-smet";
+    var GITHUB_DOSYA = "veritabani.json";
+    var GITHUB_TOKEN = "ghp_1eJF1FMLT821uavQK9BzD54rhOS5934GBUH"; // Güvenli kişisel erişim anahtarınız
+
+    var githubVeriDeposu = {
         istekler: [],
         arsiv: []
     };
 
-    // Buluttan anlık senkronize etme motoru
-    async function buluttanVerileriCek() {
+    var shaKodu = ""; // GitHub dosya güncelleme doğrulama kodu
+
+    // GitHub deposundan veritabanını çekme fonksiyonu
+    async function githubVerileriniCek() {
         try {
-            // Eğer daha önceden bulutta veri varsa doğrudan küresel hafızadan çeker
-            var kayitliBulut = localStorage.getItem("guvenlikBulutHavuzu_v2");
-            if (kayitliBulut) {
-                gercekBulutVerisi = JSON.parse(kayitliBulut);
+            var url = "https://api.github.com/repos/" + GITHUB_KULLANICI + "/" + GITHUB_REPO + "/contents/" + GITHUB_DOSYA;
+            var response = await fetch(url, {
+                headers: {
+                    "Authorization": "token " + GITHUB_TOKEN,
+                    "Accept": "application/vnd.github.v3+json"
+                }
+            });
+
+            if (response.ok) {
+                var data = await response.json();
+                shaKodu = data.sha; // Dosyanın güncel kimlik kodunu sakla
+                var decodedContent = decodeURIComponent(escape(atob(data.content)));
+                githubVeriDeposu = JSON.parse(decodedContent);
+            } else {
+                // Dosya henüz yoksa ilk şablonu oluştur
+                await githubVerileriniGonder(githubVeriDeposu);
             }
-        } catch(e) {}
-        return gercekBulutVerisi;
+        } catch (e) {
+            console.error("GitHub verileri çekerken hata oluştu:", e);
+        }
+        return githubVeriDeposu;
     }
 
-    function bulutaVerileriGonder(yeniVeri) {
-        gercekBulutVerisi = yeniVeri;
+    // GitHub deposuna veritabanını kaydetme / güncelleme fonksiyonu
+    async function githubVerileriniGonder(yeniVeri) {
+        githubVeriDeposu = yeniVeri;
         try {
-            // Tarayıcı sekmesi artsa/kapansa bile bulut senkronizasyonunu korur
-            localStorage.setItem("guvenlikBulutHavuzu_v2", JSON.stringify(yeniVeri));
-        } catch(e) {}
+            var url = "https://api.github.com/repos/" + GITHUB_KULLANICI + "/" + GITHUB_REPO + "/contents/" + GITHUB_DOSYA;
+            var jsonString = JSON.stringify(githubVeriDeposu, null, 2);
+            var base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+            var bodyData = {
+                message: "Ziyaretci sistemi veritabani guncellemesi",
+                content: base64Content
+            };
+            if (shaKodu) {
+                bodyData.sha = shaKodu;
+            }
+
+            var response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Authorization": "token " + GITHUB_TOKEN,
+                    "Content-Type": "application/json",
+                    "Accept": "application/vnd.github.v3+json"
+                },
+                body: JSON.stringify(bodyData)
+            });
+
+            if (response.ok) {
+                var resData = await response.json();
+                shaKodu = resData.content.sha; // Yeni SHA kodunu güncelle
+            }
+        } catch (e) {
+            console.error("GitHub verileri gönderilirken hata oluştu:", e);
+        }
     }
 
-    buluttanVerileriCek();
-
-    var secilenGirisTuru = "Araçlı Giriş";
-    var secilenCinsiyet = "Erkek";
-    var secilenSebep = "Misafir / Ziyaretçi";
-    var aktifResimSrc = "";
-
-    window.onload = function() {
+    // Sayfa açıldığında verileri GitHub bulutundan senkronize et
+    window.onload = async function() {
         kameraAyariniGuncelle();
+        await githubVerileriniCek();
     };
 
     function kameraAyariniGuncelle() {
@@ -598,6 +640,7 @@
         modalImg.src = fotoSrc;
     }
 
+    var aktifResimSrc = "";
     function resmiTelefonaIndir() {
         if (!aktifResimSrc) return;
         var a = document.createElement('a');
@@ -622,6 +665,10 @@
         var dakika = String(simdi.getMinutes()).padStart(2, '0');
         return yil + '-' + ay + '-' + gun + 'T' + saat + ':' + dakika;
     }
+
+    var secilenGirisTuru = "Araçlı Giriş";
+    var secilenCinsiyet = "Erkek";
+    var secilenSebep = "Misafir / Ziyaretçi";
 
     function setGirisTuru(tur) {
         secilenGirisTuru = tur;
@@ -664,7 +711,7 @@
         element.classList.add('active');
     }
 
-    function sirketBasvurusuGonder() {
+    async function sirketBasvurusuGonder() {
         var sirketAdi = document.getElementById('basvuruSirket').value.trim();
         var yetkili = document.getElementById('basvuruYetkili').value.trim();
         var telefon = document.getElementById('basvuruTel').value.trim();
@@ -674,8 +721,8 @@
             return;
         }
 
-        var db = gercekBulutVerisi;
-        db.istekler.push({
+        await githubVerileriniCek();
+        githubVeriDeposu.istekler.push({
             id: 'istek_' + Date.now(),
             sirketAdi: sirketAdi,
             yetkili: yetkili,
@@ -683,15 +730,15 @@
             durum: 'Onay Bekliyor',
             tarih: new Date().toLocaleDateString('tr-TR')
         });
-        bulutaVerileriGonder(db);
+        await githubVerileriniGonder(githubVeriDeposu);
         
         document.getElementById('basvuruSirket').value = '';
         document.getElementById('basvuruYetkili').value = '';
         document.getElementById('basvuruTel').value = '';
-        alert("Başvurunuz küresel bulut veritabanına kaydedildi, yönetici onayından sonra giriş yapabilirsiniz!");
+        alert("Başvurunuz GitHub bulut veritabanınıza kaydedildi, yönetici onayından sonra giriş yapabilirsiniz!");
     }
 
-    function sirketGirisYap() {
+    async function sirketGirisYap() {
         var sirketAdi = document.getElementById('girisSirketAdi').value.trim();
         var yetkiliAdi = document.getElementById('girisYetkiliAdi').value.trim();
         var telefon = document.getElementById('girisTelefon').value.trim();
@@ -701,10 +748,10 @@
             return;
         }
 
-        var db = gercekBulutVerisi;
+        await githubVerileriniCek();
         var bulunan = null;
-        for (var i = 0; i < db.istekler.length; i++) {
-            var r = db.istekler[i];
+        for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
+            var r = githubVeriDeposu.istekler[i];
             if (r && r.sirketAdi.toLowerCase() === sirketAdi.toLowerCase() && 
                 r.yetkili.toLowerCase() === yetkiliAdi.toLowerCase() && 
                 r.telefon === telefon) {
@@ -720,39 +767,39 @@
                 document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
                 alert("Giriş başarılı! Hoş geldiniz.");
             } else if (bulunan.durum === 'Engellendi') {
-                alert("Erişim Reddedildi: Bu kayıt bulut yöneticisi tarafından engellenmiştir.");
+                alert("Erişim Reddedildi: Bu kayıt GitHub yöneticisi tarafından engellenmiştir.");
             } else {
                 alert("Erişim Beklemede: Başvurunuz henüz yönetici tarafından onaylanmamıştır!");
             }
         } else {
-            alert("Erişim Reddedildi: Onaylanmamış veya bulutta kayıtlı olmayan bilgiler!");
+            alert("Erişim Reddedildi: Onaylanmamış veya GitHub bulutunda kayıtlı olmayan bilgiler!");
         }
     }
 
-    function yoneticiGirisYap() {
+    async function yoneticiGirisYap() {
         var girilenSifre = document.getElementById('yoneticiSifre').value.trim();
         if (girilenSifre === "Zeynep1011") {
             document.getElementById('yoneticiSifre').value = '';
             document.getElementById('homeScreen').classList.add('hidden');
             document.getElementById('adminPanelScreen').classList.remove('hidden');
-            yoneticiIstekleriniGoster();
+            await yoneticiIstekleriniGoster();
         } else {
             alert("Hatalı yönetici şifresi!");
         }
     }
 
-    function yoneticiIstekleriniGoster() {
+    async function yoneticiIstekleriniGoster() {
         var container = document.getElementById('pendingRequestsList');
-        var db = gercekBulutVerisi;
+        await githubVerileriniCek();
 
-        if (db.istekler.length === 0) {
-            container.innerHTML = '<div class="empty-message">Bulut veritabanında kayıtlı başvuru bulunmuyor.</div>';
+        if (githubVeriDeposu.istekler.length === 0) {
+            container.innerHTML = '<div class="empty-message">GitHub veritabanında kayıtlı başvuru bulunmuyor.</div>';
             return;
         }
 
         var html = '';
-        for (var i = 0; i < db.istekler.length; i++) {
-            var req = db.istekler[i];
+        for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
+            var req = githubVeriDeposu.istekler[i];
             var durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : 'request-card';
             
             var engelleKaldirBtn = req.durum === 'Engellendi' 
@@ -781,31 +828,31 @@
         container.innerHTML = html;
     }
 
-    function durumDegistir(id, yeniDurum) {
-        var db = gercekBulutVerisi;
-        for (var i = 0; i < db.istekler.length; i++) {
-            if (db.istekler[i] && db.istekler[i].id === id) {
-                db.istekler[i].durum = yeniDurum;
+    async function durumDegistir(id, yeniDurum) {
+        await githubVerileriniCek();
+        for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
+            if (githubVeriDeposu.istekler[i] && githubVeriDeposu.istekler[i].id === id) {
+                githubVeriDeposu.istekler[i].durum = yeniDurum;
                 break;
             }
         }
-        bulutaVerileriGonder(db);
-        yoneticiIstekleriniGoster();
-        alert("Durum bulutta '" + yeniDurum + "' olarak güncellendi!");
+        await githubVerileriniGonder(githubVeriDeposu);
+        await yoneticiIstekleriniGoster();
+        alert("Durum GitHub bulutunda '" + yeniDurum + "' olarak güncellendi!");
     }
 
-    function basvuruyuSil(id) {
-        if (confirm("Bu başvuruyu buluttan kalıcı olarak silmek istediğinize emin misiniz?")) {
-            var db = gercekBulutVerisi;
+    async function basvuruyuSil(id) {
+        if (confirm("Bu başvuruyu GitHub bulutundan kalıcı olarak silmek istediğinize emin misiniz?")) {
+            await githubVerileriniCek();
             var yeniListe = [];
-            for (var i = 0; i < db.istekler.length; i++) {
-                if (db.istekler[i].id !== id) {
-                    yeniListe.push(db.istekler[i]);
+            for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
+                if (githubVeriDeposu.istekler[i].id !== id) {
+                    yeniListe.push(githubVeriDeposu.istekler[i]);
                 }
             }
-            db.istekler = yeniListe;
-            bulutaVerileriGonder(db);
-            yoneticiIstekleriniGoster();
+            githubVeriDeposu.istekler = yeniListe;
+            await githubVerileriniGonder(githubVeriDeposu);
+            await yoneticiIstekleriniGoster();
         }
     }
 
@@ -816,10 +863,10 @@
         document.getElementById('homeScreen').classList.remove('hidden');
     }
 
-    function openArchive() {
+    async function openArchive() {
         document.getElementById('formScreen').classList.add('hidden');
         document.getElementById('archiveScreen').classList.remove('hidden');
-        listeyiGoster();
+        await listeyiGoster();
     }
 
     function yeniKayitFormuAc() {
@@ -831,7 +878,7 @@
     function formuSifirla() {
         document.getElementById('duzenlenenId').value = '';
         document.getElementById('formTitle').innerText = "GÜVENLİK SİSTEMİ (Yeni Kayıt)";
-        document.getElementById('kaydetGuncelleBtn').innerText = "KAYDET VE BULUTA GÖNDER";
+        document.getElementById('kaydetGuncelleBtn').innerText = "KAYDET VE GİT-HUB BULUTA GÖNDER";
         document.getElementById('plaka').value = '';
         document.getElementById('adSoyad').value = '';
         document.getElementById('tcNo').value = '';
@@ -863,56 +910,58 @@
             return;
         }
 
-        var db = gercekBulutVerisi;
-        var eskiFotoOn = null;
-        var eskiFotoArka = null;
+        async function islemYap() {
+            await githubVerileriniCek();
+            var eskiFotoOn = null;
+            var eskiFotoArka = null;
 
-        if (duzenlenenId) {
-            for (var i = 0; i < db.arsiv.length; i++) {
-                if (db.arsiv[i] && db.arsiv[i].id == duzenlenenId) {
-                    eskiFotoOn = db.arsiv[i].fotoOn;
-                    eskiFotoArka = db.arsiv[i].fotoArka;
-                    break;
+            if (duzenlenenId) {
+                for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
+                    if (githubVeriDeposu.arsiv[i] && githubVeriDeposu.arsiv[i].id == duzenlenenId) {
+                        eskiFotoOn = githubVeriDeposu.arsiv[i].fotoOn;
+                        eskiFotoArka = githubVeriDeposu.arsiv[i].fotoArka;
+                        break;
+                    }
                 }
             }
-        }
 
-        if (fotoInputOn.files && fotoInputOn.files[0]) {
-            var readerOn = new FileReader();
-            readerOn.onload = function(eOn) {
-                var sonucOn = eOn.target.result;
+            if (fotoInputOn.files && fotoInputOn.files[0]) {
+                var readerOn = new FileReader();
+                readerOn.onload = function(eOn) {
+                    var sonucOn = eOn.target.result;
+                    if (fotoInputArka.files && fotoInputArka.files[0]) {
+                        var readerArka = new FileReader();
+                        readerArka.onload = function(eArka) {
+                            veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eArka.target.result);
+                        };
+                        readerArka.readAsDataURL(fotoInputArka.files[0]);
+                    } else {
+                        veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eskiFotoArka);
+                    }
+                };
+                readerOn.readAsDataURL(fotoInputOn.files[0]);
+            } else {
                 if (fotoInputArka.files && fotoInputArka.files[0]) {
                     var readerArka = new FileReader();
                     readerArka.onload = function(eArka) {
-                        veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eArka.target.result);
+                        veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eArka.target.result);
                     };
                     readerArka.readAsDataURL(fotoInputArka.files[0]);
                 } else {
-                    veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eskiFotoArka);
+                    veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eskiFotoArka);
                 }
-            };
-            readerOn.readAsDataURL(fotoInputOn.files[0]);
-        } else {
-            if (fotoInputArka.files && fotoInputArka.files[0]) {
-                var readerArka = new FileReader();
-                readerArka.onload = function(eArka) {
-                    veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eArka.target.result);
-                };
-                readerArka.readAsDataURL(fotoInputArka.files[0]);
-            } else {
-                veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eskiFotoArka);
             }
         }
+        islemYap();
     }
 
-    function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoOnData, fotoArkaData) {
+    async function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoOnData, fotoArkaData) {
         function formatTarih(tarihStr) {
             if (!tarihStr) return 'Belirtilmedi';
             var d = new Date(tarihStr);
             return d.toLocaleString('tr-TR', {dateStyle: 'short', timeStyle: 'short'});
         }
 
-        var db = gercekBulutVerisi;
         var kayitVerisi = {
             id: duzenlenenId || ('arsiv_' + Date.now()),
             girisTuru: secilenGirisTuru,
@@ -930,28 +979,28 @@
         };
 
         if (duzenlenenId) {
-            for (var i = 0; i < db.arsiv.length; i++) {
-                if (db.arsiv[i] && db.arsiv[i].id == duzenlenenId) {
-                    db.arsiv[i] = kayitVerisi;
+            for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
+                if (githubVeriDeposu.arsiv[i] && githubVeriDeposu.arsiv[i].id == duzenlenenId) {
+                    githubVeriDeposu.arsiv[i] = kayitVerisi;
                     break;
                 }
             }
-            alert("Kayıt bulut veritabanında güncellendi!");
+            alert("Kayıt GitHub bulut veritabanında güncellendi!");
         } else {
-            db.arsiv.push(kayitVerisi);
-            alert("Kayıt bulut veritabanına eklendi!");
+            githubVeriDeposu.arsiv.push(kayitVerisi);
+            alert("Kayıt GitHub bulut veritabanına eklendi!");
         }
-        bulutaVerileriGonder(db);
+        await githubVerileriniGonder(githubVeriDeposu);
         formuSifirla();
-        openArchive();
+        await openArchive();
     }
 
-    function kaydiDuzenle(id) {
-        var db = gercekBulutVerisi;
+    async function kaydiDuzenle(id) {
+        await githubVerileriniCek();
         var k = null;
-        for (var i = 0; i < db.arsiv.length; i++) {
-            if (db.arsiv[i] && db.arsiv[i].id == id) {
-                k = db.arsiv[i];
+        for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
+            if (githubVeriDeposu.arsiv[i] && githubVeriDeposu.arsiv[i].id == id) {
+                k = githubVeriDeposu.arsiv[i];
                 break;
             }
         }
@@ -977,13 +1026,13 @@
         document.getElementById('formScreen').classList.remove('hidden');
     }
 
-    function listeyiGoster(filtreMetni) {
+    async function listeyiGoster(filtreMetni) {
         var listContainer = document.getElementById('visitorList');
-        var db = gercekBulutVerisi;
-        var kayitlar = db.arsiv.slice().reverse();
+        await githubVerileriniCek();
+        var kayitlar = githubVeriDeposu.arsiv.slice().reverse();
 
         if (kayitlar.length === 0) {
-            listContainer.innerHTML = '<div class="empty-message">Bulut arşivi boş.</div>';
+            listContainer.innerHTML = '<div class="empty-message">GitHub bulut arşivi boş.</div>';
             return;
         }
 
@@ -1038,24 +1087,24 @@
         listContainer.innerHTML = html;
     }
 
-    function kaydiSil(id) {
-        if (confirm("Bu arşivi buluttan kalıcı olarak silmek istediğinize emin misiniz?")) {
-            var db = gercekBulutVerisi;
+    async function kaydiSil(id) {
+        if (confirm("Bu arşivi GitHub bulutundan kalıcı olarak silmek istediğinize emin misiniz?")) {
+            await githubVerileriniCek();
             var yeniArsiv = [];
-            for (var i = 0; i < db.arsiv.length; i++) {
-                if (db.arsiv[i].id !== id) {
-                    yeniArsiv.push(db.arsiv[i]);
+            for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
+                if (githubVeriDeposu.arsiv[i].id !== id) {
+                    yeniArsiv.push(githubVeriDeposu.arsiv[i]);
                 }
             }
-            db.arsiv = yeniArsiv;
-            bulutaVerileriGonder(db);
-            listeyiGoster(document.getElementById('searchInput').value);
+            githubVeriDeposu.arsiv = yeniArsiv;
+            await githubVerileriniGonder(githubVeriDeposu);
+            await listeyiGoster(document.getElementById('searchInput').value);
         }
     }
 
-    function aramaYap() {
+    async function aramaYap() {
         var metin = document.getElementById('searchInput').value;
-        listeyiGoster(metin);
+        await listeyiGoster(metin);
     }
 
     function arsiviPdfOlarakIndir() {
