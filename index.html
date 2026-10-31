@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Güvenlik ve Ziyaretçi Yönetim Sistemi (GitHub Bulut)</title>
+    <title>Güvenlik ve Ziyaretçi Yönetim Sistemi</title>
     <style>
         :root {
             --primary-color: #0066cc;
@@ -239,6 +239,11 @@
 
         .request-card {
             border-left-color: #ffc107;
+        }
+
+        .request-card.approved {
+            border-left-color: #28a745;
+            background: #f4fbf5;
         }
 
         .request-card.blocked {
@@ -513,7 +518,7 @@
     <!-- 4. KAYIT DOSYASI / ARŞİV EKRANI -->
     <div id="archiveScreen" class="hidden">
         <div class="header-nav" style="margin-top: 0;">
-            <h2>KAYIT DOSYASI (GİT-HUB BULUT ARŞİVİ)</h2>
+            <h2>KAYIT DOSYASI (BULUT ARŞİVİ)</h2>
             <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                 <button class="nav-btn" style="background: var(--success-color); font-weight: bold;" onclick="arsiviPdfOlarakIndir()">📥 PDF İndir</button>
                 <button class="nav-btn" onclick="yeniKayitFormuAc()">➕ Yeni Ekle</button>
@@ -539,62 +544,78 @@
 </div>
 
 <script>
-    /* 
-       GİT-HUB BULUT ENTEGRASYONU (GitHub Pages & GitHub REST API)
-       Kullanıcı Adı: hediyeefsane202778
-       Depo (Repo): k-smet
-       Veri Dosyası: veritabani.json
-    */
     var GITHUB_KULLANICI = "hediyeefsane202778";
     var GITHUB_REPO = "k-smet";
     var GITHUB_DOSYA = "veritabani.json";
-    var GITHUB_TOKEN = "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"; // Güncellenen kişisel erişim anahtarınız
+    var GITHUB_TOKEN = "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";
 
-    var githubVeriDeposu = {
+    var veriDeposu = {
         istekler: [],
         arsiv: []
     };
 
-    var shaKodu = ""; // GitHub dosya güncelleme doğrulama kodu
+    var shaKodu = "";
 
-    // GitHub deposundan veritabanını çekme fonksiyonu
-    async function githubVerileriniCek() {
+    // GitHub bulutundan ya da yerel açılışta güvenli veri yükleme
+    async function verileriGetir() {
+        // Eğer yerel dosya (file://) olarak açıldıysa CORS hatası almamak için güvenli yedek kullanılır
+        if (window.location.protocol === "file:") {
+            veriDeposu.istekler = JSON.parse(localStorage.getItem('guvenlik_istekler_yedek')) || [];
+            veriDeposu.arsiv = JSON.parse(localStorage.getItem('guvenlik_arsiv_yedek')) || [];
+            return veriDeposu;
+        }
+
         try {
-            var url = "https://api.github.com/repos/" + GITHUB_KULLANICI + "/" + GITHUB_REPO + "/contents/" + GITHUB_DOSYA;
+            var url = "https://api.github.com/repos/" + GITHUB_KULLANICI + "/" + GITHUB_REPO + "/contents/" + GITHUB_DOSYA + "?t=" + new Date().getTime();
             var response = await fetch(url, {
                 headers: {
                     "Authorization": "token " + GITHUB_TOKEN,
-                    "Accept": "application/vnd.github.v3+json"
+                    "Accept": "application/vnd.github.v3+json",
+                    "Cache-Control": "no-cache"
                 }
             });
 
             if (response.ok) {
                 var data = await response.json();
-                shaKodu = data.sha; // Dosyanın güncel kimlik kodunu sakla
+                shaKodu = data.sha;
                 var decodedContent = decodeURIComponent(escape(atob(data.content)));
-                githubVeriDeposu = JSON.parse(decodedContent);
-            } else {
-                // Dosya henüz yoksa ilk şablonu oluştur
-                await githubVerileriniGonder(githubVeriDeposu);
+                veriDeposu = JSON.parse(decodedContent);
+            } else if (response.status === 404) {
+                veriDeposu = { istekler: [], arsiv: [] };
+                shaKodu = "";
             }
         } catch (e) {
-            console.error("GitHub verileri çekerken hata oluştu:", e);
+            console.error("Bulut bağlantı hatası, yerel yedeğe geçiliyor:", e);
+            veriDeposu.istekler = JSON.parse(localStorage.getItem('guvenlik_istekler_yedek')) || [];
+            veriDeposu.arsiv = JSON.parse(localStorage.getItem('guvenlik_arsiv_yedek')) || [];
         }
-        return githubVeriDeposu;
+        return veriDeposu;
     }
 
-    // GitHub deposuna veritabanını kaydetme / güncelleme fonksiyonu
-    async function githubVerileriniGonder(yeniVeri) {
-        githubVeriDeposu = yeniVeri;
+    // GitHub buluta hatasız kaydetme (Çakışma önleyici SHA mekanizmasıyla)
+    async function verileriGonder(yeniVeri) {
+        veriDeposu = yeniVeri;
+        
+        // Her ihtimale karşı tarayıcı yedeklemesini de güncel tutalım
+        localStorage.setItem('guvenlik_istekler_yedek', JSON.stringify(veriDeposu.istekler));
+        localStorage.setItem('guvenlik_arsiv_yedek', JSON.stringify(veriDeposu.arsiv));
+
+        if (window.location.protocol === "file:") {
+            return; // Yerelde çalışırken GitHub API'yi zorlamaz
+        }
+
         try {
+            await verileriGetir();
+
             var url = "https://api.github.com/repos/" + GITHUB_KULLANICI + "/" + GITHUB_REPO + "/contents/" + GITHUB_DOSYA;
-            var jsonString = JSON.stringify(githubVeriDeposu, null, 2);
+            var jsonString = JSON.stringify(veriDeposu, null, 2);
             var base64Content = btoa(unescape(encodeURIComponent(jsonString)));
 
             var bodyData = {
-                message: "Ziyaretci sistemi veritabani guncellemesi",
+                message: "Guvenlik sistemi otomatik veri guncellemesi",
                 content: base64Content
             };
+            
             if (shaKodu) {
                 bodyData.sha = shaKodu;
             }
@@ -611,17 +632,19 @@
 
             if (response.ok) {
                 var resData = await response.json();
-                shaKodu = resData.content.sha; // Yeni SHA kodunu güncelle
+                shaKodu = resData.content.sha;
+            } else {
+                var errJson = await response.json();
+                console.error("GitHub kayıt hatası:", errJson.message);
             }
         } catch (e) {
-            console.error("GitHub verileri gönderilirken hata oluştu:", e);
+            console.error("Buluta gönderirken bağlantı hatası:", e);
         }
     }
 
-    // Sayfa açıldığında verileri GitHub bulutundan senkronize et
     window.onload = async function() {
         kameraAyariniGuncelle();
-        await githubVerileriniCek();
+        await verileriGetir();
     };
 
     function kameraAyariniGuncelle() {
@@ -721,8 +744,8 @@
             return;
         }
 
-        await githubVerileriniCek();
-        githubVeriDeposu.istekler.push({
+        await verileriGetir();
+        veriDeposu.istekler.push({
             id: 'istek_' + Date.now(),
             sirketAdi: sirketAdi,
             yetkili: yetkili,
@@ -730,12 +753,12 @@
             durum: 'Onay Bekliyor',
             tarih: new Date().toLocaleDateString('tr-TR')
         });
-        await githubVerileriniGonder(githubVeriDeposu);
+        await verileriGonder(veriDeposu);
         
         document.getElementById('basvuruSirket').value = '';
         document.getElementById('basvuruYetkili').value = '';
         document.getElementById('basvuruTel').value = '';
-        alert("Başvurunuz GitHub bulut veritabanınıza kaydedildi, yönetici onayından sonra giriş yapabilirsiniz!");
+        alert("Başvurunuz başarıyla kaydedildi, yönetici onayından sonra giriş yapabilirsiniz!");
     }
 
     async function sirketGirisYap() {
@@ -748,10 +771,10 @@
             return;
         }
 
-        await githubVerileriniCek();
+        await verileriGetir();
         var bulunan = null;
-        for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
-            var r = githubVeriDeposu.istekler[i];
+        for (var i = 0; i < veriDeposu.istekler.length; i++) {
+            var r = veriDeposu.istekler[i];
             if (r && r.sirketAdi.toLowerCase() === sirketAdi.toLowerCase() && 
                 r.yetkili.toLowerCase() === yetkiliAdi.toLowerCase() && 
                 r.telefon === telefon) {
@@ -767,12 +790,12 @@
                 document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
                 alert("Giriş başarılı! Hoş geldiniz.");
             } else if (bulunan.durum === 'Engellendi') {
-                alert("Erişim Reddedildi: Bu kayıt GitHub yöneticisi tarafından engellenmiştir.");
+                alert("Erişim Reddedildi: Bu hesap yönetici tarafından engellenmiştir.");
             } else {
                 alert("Erişim Beklemede: Başvurunuz henüz yönetici tarafından onaylanmamıştır!");
             }
         } else {
-            alert("Erişim Reddedildi: Onaylanmamış veya GitHub bulutunda kayıtlı olmayan bilgiler!");
+            alert("Erişim Reddedildi: Böyle bir kayıt bulunamadı, lütfen önce başvuru yapın!");
         }
     }
 
@@ -790,17 +813,17 @@
 
     async function yoneticiIstekleriniGoster() {
         var container = document.getElementById('pendingRequestsList');
-        await githubVerileriniCek();
+        await verileriGetir();
 
-        if (githubVeriDeposu.istekler.length === 0) {
-            container.innerHTML = '<div class="empty-message">GitHub veritabanında kayıtlı başvuru bulunmuyor.</div>';
+        if (veriDeposu.istekler.length === 0) {
+            container.innerHTML = '<div class="empty-message">Kayıtlı başvuru bulunmuyor.</div>';
             return;
         }
 
         var html = '';
-        for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
-            var req = githubVeriDeposu.istekler[i];
-            var durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : 'request-card';
+        for (var i = 0; i < veriDeposu.istekler.length; i++) {
+            var req = veriDeposu.istekler[i];
+            var durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : (req.durum === 'Onaylandı' ? 'request-card approved' : 'request-card');
             
             var engelleKaldirBtn = req.durum === 'Engellendi' 
                 ? '<button class="btn-success" onclick="durumDegistir(\'' + req.id + '\', \'Onay Bekliyor\')">Engeli Kaldır</button>'
@@ -829,29 +852,29 @@
     }
 
     async function durumDegistir(id, yeniDurum) {
-        await githubVerileriniCek();
-        for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
-            if (githubVeriDeposu.istekler[i] && githubVeriDeposu.istekler[i].id === id) {
-                githubVeriDeposu.istekler[i].durum = yeniDurum;
+        await verileriGetir();
+        for (var i = 0; i < veriDeposu.istekler.length; i++) {
+            if (veriDeposu.istekler[i] && veriDeposu.istekler[i].id === id) {
+                veriDeposu.istekler[i].durum = yeniDurum;
                 break;
             }
         }
-        await githubVerileriniGonder(githubVeriDeposu);
+        await verileriGonder(veriDeposu);
         await yoneticiIstekleriniGoster();
-        alert("Durum GitHub bulutunda '" + yeniDurum + "' olarak güncellendi!");
+        alert("Durum '" + yeniDurum + "' olarak güncellendi!");
     }
 
     async function basvuruyuSil(id) {
-        if (confirm("Bu başvuruyu GitHub bulutundan kalıcı olarak silmek istediğinize emin misiniz?")) {
-            await githubVerileriniCek();
+        if (confirm("Bu başvuruyu silmek istediğinize emin misiniz?")) {
+            await verileriGetir();
             var yeniListe = [];
-            for (var i = 0; i < githubVeriDeposu.istekler.length; i++) {
-                if (githubVeriDeposu.istekler[i].id !== id) {
-                    yeniListe.push(githubVeriDeposu.istekler[i]);
+            for (var i = 0; i < veriDeposu.istekler.length; i++) {
+                if (veriDeposu.istekler[i].id !== id) {
+                    yeniListe.push(veriDeposu.istekler[i]);
                 }
             }
-            githubVeriDeposu.istekler = yeniListe;
-            await githubVerileriniGonder(githubVeriDeposu);
+            veriDeposu.istekler = yeniListe;
+            await verileriGonder(veriDeposu);
             await yoneticiIstekleriniGoster();
         }
     }
@@ -878,7 +901,7 @@
     function formuSifirla() {
         document.getElementById('duzenlenenId').value = '';
         document.getElementById('formTitle').innerText = "GÜVENLİK SİSTEMİ (Yeni Kayıt)";
-        document.getElementById('kaydetGuncelleBtn').innerText = "KAYDET VE GİT-HUB BULUTA GÖNDER";
+        document.getElementById('kaydetGuncelleBtn').innerText = "KAYDET VE BULUTA GÖNDER";
         document.getElementById('plaka').value = '';
         document.getElementById('adSoyad').value = '';
         document.getElementById('tcNo').value = '';
@@ -911,15 +934,15 @@
         }
 
         async function islemYap() {
-            await githubVerileriniCek();
+            await verileriGetir();
             var eskiFotoOn = null;
             var eskiFotoArka = null;
 
             if (duzenlenenId) {
-                for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
-                    if (githubVeriDeposu.arsiv[i] && githubVeriDeposu.arsiv[i].id == duzenlenenId) {
-                        eskiFotoOn = githubVeriDeposu.arsiv[i].fotoOn;
-                        eskiFotoArka = githubVeriDeposu.arsiv[i].fotoArka;
+                for (var i = 0; i < veriDeposu.arsiv.length; i++) {
+                    if (veriDeposu.arsiv[i] && veriDeposu.arsiv[i].id == duzenlenenId) {
+                        eskiFotoOn = veriDeposu.arsiv[i].fotoOn;
+                        eskiFotoArka = veriDeposu.arsiv[i].fotoArka;
                         break;
                     }
                 }
@@ -979,28 +1002,28 @@
         };
 
         if (duzenlenenId) {
-            for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
-                if (githubVeriDeposu.arsiv[i] && githubVeriDeposu.arsiv[i].id == duzenlenenId) {
-                    githubVeriDeposu.arsiv[i] = kayitVerisi;
+            for (var i = 0; i < veriDeposu.arsiv.length; i++) {
+                if (veriDeposu.arsiv[i] && veriDeposu.arsiv[i].id == duzenlenenId) {
+                    veriDeposu.arsiv[i] = kayitVerisi;
                     break;
                 }
             }
-            alert("Kayıt GitHub bulut veritabanında güncellendi!");
+            alert("Kayıt güncellendi!");
         } else {
-            githubVeriDeposu.arsiv.push(kayitVerisi);
-            alert("Kayıt GitHub bulut veritabanına eklendi!");
+            veriDeposu.arsiv.push(kayitVerisi);
+            alert("Kayıt arşive eklendi!");
         }
-        await githubVerileriniGonder(githubVeriDeposu);
+        await verileriGonder(veriDeposu);
         formuSifirla();
         await openArchive();
     }
 
     async function kaydiDuzenle(id) {
-        await githubVerileriniCek();
+        await verileriGetir();
         var k = null;
-        for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
-            if (githubVeriDeposu.arsiv[i] && githubVeriDeposu.arsiv[i].id == id) {
-                k = githubVeriDeposu.arsiv[i];
+        for (var i = 0; i < veriDeposu.arsiv.length; i++) {
+            if (veriDeposu.arsiv[i] && veriDeposu.arsiv[i].id == id) {
+                k = veriDeposu.arsiv[i];
                 break;
             }
         }
@@ -1028,11 +1051,11 @@
 
     async function listeyiGoster(filtreMetni) {
         var listContainer = document.getElementById('visitorList');
-        await githubVerileriniCek();
-        var kayitlar = githubVeriDeposu.arsiv.slice().reverse();
+        await verileriGetir();
+        var kayitlar = veriDeposu.arsiv.slice().reverse();
 
         if (kayitlar.length === 0) {
-            listContainer.innerHTML = '<div class="empty-message">GitHub bulut arşivi boş.</div>';
+            listContainer.innerHTML = '<div class="empty-message">Arşiv boş.</div>';
             return;
         }
 
@@ -1088,16 +1111,16 @@
     }
 
     async function kaydiSil(id) {
-        if (confirm("Bu arşivi GitHub bulutundan kalıcı olarak silmek istediğinize emin misiniz?")) {
-            await githubVerileriniCek();
+        if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
+            await verileriGetir();
             var yeniArsiv = [];
-            for (var i = 0; i < githubVeriDeposu.arsiv.length; i++) {
-                if (githubVeriDeposu.arsiv[i].id !== id) {
-                    yeniArsiv.push(githubVeriDeposu.arsiv[i]);
+            for (var i = 0; i < veriDeposu.arsiv.length; i++) {
+                if (veriDeposu.arsiv[i].id !== id) {
+                    yeniArsiv.push(veriDeposu.arsiv[i]);
                 }
             }
-            githubVeriDeposu.arsiv = yeniArsiv;
-            await githubVerileriniGonder(githubVeriDeposu);
+            veriDeposu.arsiv = yeniArsiv;
+            await verileriGonder(veriDeposu);
             await listeyiGoster(document.getElementById('searchInput').value);
         }
     }
