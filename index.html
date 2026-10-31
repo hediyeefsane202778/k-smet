@@ -24,7 +24,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
@@ -345,7 +345,6 @@
             margin-bottom: 12px;
         }
 
-        /* Yazdırma / PDF Çıktısı Özel Tasarımı */
         @media print {
             body { background: white !important; color: black !important; padding: 0 !important; }
             .container, #archiveScreen { box-shadow: none !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; }
@@ -367,7 +366,7 @@
         <div class="section-box" style="border-left: 5px solid var(--primary-color);">
             <h3 style="font-size: 14px; color: var(--primary-color); margin-bottom: 8px;">İşletme / Şirket İşlemleri</h3>
             <div style="background: #e6f0fa; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
-                <label style="color: var(--primary-color); font-size: 12px;">Onaylandıktan Sonra Bilgilerinizle Giriş Yapın</label>
+                <label style="color: var(--primary-color); font-size: 12px;">Sisteme Giriş Yapın</label>
                 <div class="form-group" style="margin-top: 6px; margin-bottom: 8px;">
                     <input type="text" id="girisSirketAdi" placeholder="Şirket Adı" style="font-size: 13px; padding: 8px; margin-bottom: 5px;">
                     <input type="text" id="girisYetkiliAdi" placeholder="Yetkili Adı Soyadı" style="font-size: 13px; padding: 8px; margin-bottom: 5px;">
@@ -376,7 +375,7 @@
                 <button class="nav-btn" style="background:var(--primary-color); width: 100%; padding: 8px; font-weight: bold;" onclick="sirketGirisYap()">SİSTEME GİRİŞ YAP</button>
             </div>
 
-            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Yeni kayıt olmak için bilgilerinizi doldurup başvurun:</p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Yeni kayıt oluştur:</p>
             
             <div class="form-group">
                 <label>İşletme / Site Adı</label>
@@ -390,12 +389,12 @@
                 <label>İletişim Telefonu</label>
                 <input type="tel" id="basvuruTel" placeholder="05XX XXX XX XX">
             </div>
-            <button class="btn-primary" onclick="sirketBasvurusuGonder()" style="padding: 10px; font-size: 14px;">BAŞVURU GÖNDER</button>
+            <button class="btn-primary" onclick="sirketBasvurusuGonder()" style="padding: 10px; font-size: 14px;">KAYIT OLUŞTUR</button>
         </div>
 
         <div class="section-box" style="border-left: 5px solid #6c757d;">
             <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">🔒 Yönetici Giriş Paneli</h3>
-            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Başvuruları yönetmek için şifrenizi girin.</p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Yönetim paneli için şifrenizi girin.</p>
             
             <div class="form-group">
                 <label>Yönetici Şifresi</label>
@@ -412,7 +411,7 @@
             <button class="nav-btn" style="background:#dc3545;" onclick="anaEkranaDon()">🔒 Çıkış Yap</button>
         </div>
         <div class="section-box">
-            <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">📥 Gelen Başvurular (Onayla / Engelle)</h3>
+            <h3 style="font-size: 14px; color: #495057; margin-bottom: 8px;">📥 Kayıtlı İşletmeler</h3>
             <div id="pendingRequestsList"></div>
         </div>
     </div>
@@ -516,7 +515,6 @@
         <div class="header-nav" style="margin-top: 0;">
             <h2>KAYIT DOSYASI (ARŞİV)</h2>
             <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                <!-- Gerçek PDF Olarak İndir Butonu -->
                 <button class="nav-btn" style="background: var(--success-color); font-weight: bold;" onclick="arsiviPdfOlarakIndir()">📥 PDF İndir</button>
                 <button class="nav-btn" onclick="yeniKayitFormuAc()">➕ Yeni Ekle</button>
             </div>
@@ -541,15 +539,16 @@
 </div>
 
 <script>
-    const databaseURL = "https://guvenliksistemi-default-rtdb.firebaseio.com/";
+    // Bellek tabanlı geçici dizi (Telefon deposunu ASLA kullanmaz, tamamen ram/hafıza üstünden akar)
+    var hafizaIstekleri = [];
+    var hafizaArsivi = [];
 
     var secilenGirisTuru = "Araçlı Giriş";
     var secilenCinsiyet = "Erkek";
     var secilenSebep = "Misafir / Ziyaretçi";
     var aktifResimSrc = "";
 
-    window.onload = async function() {
-        await sistemKilitKontrolu();
+    window.onload = function() {
         kameraAyariniGuncelle();
     };
 
@@ -582,54 +581,6 @@
     function resimModaliniKapat() {
         document.getElementById('photoModal').style.display = "none";
         aktifResimSrc = "";
-    }
-
-    async function sistemKilitKontrolu() {
-        const url = `${databaseURL}/sistem_durumu.json`;
-        const container = document.getElementById('mainContainer');
-        try {
-            let response = await fetch(url);
-            let veri = await response.json();
-            if (veri && veri.kilitli) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding: 40px 20px;">
-                        <h1 style="color:#c0392b; font-size:1.8em; margin-bottom:15px;">Sistem Kilitlenmiştir</h1>
-                        <p style="font-size:1.1em; color:#444; margin-bottom:10px;">Sistem yönetici tarafından veya kapasite dolayısıyla kilitlenmiştir.</p>
-                    </div>
-                `;
-                return false;
-            }
-            return true;
-        } catch (hata) {
-            console.error("Bağlantı hatası:", hata);
-            return true; 
-        }
-    }
-
-    async function getFirebaseVeri(yol) {
-        try {
-            let response = await fetch(`${databaseURL}/${yol}.json`);
-            let data = await response.json();
-            if (!data) return [];
-            if (!Array.isArray(data)) {
-                return Object.keys(data).map(key => ({ ...data[key], firebaseKey: key }));
-            }
-            return data;
-        } catch (e) {
-            console.error("Veri çekme hatası:", e);
-            return [];
-        }
-    }
-
-    async function firebaseKaydet(yol, veriListesi) {
-        try {
-            await fetch(`${databaseURL}/${yol}.json`, {
-                method: 'PUT',
-                body: JSON.stringify(veriListesi)
-            });
-        } catch (e) {
-            console.error("Veri kaydetme hatası:", e);
-        }
     }
 
     function suankiTarihSaatGetir() {
@@ -683,7 +634,7 @@
         element.classList.add('active');
     }
 
-    async function sirketBasvurusuGonder() {
+    function sirketBasvurusuGonder() {
         var sirketAdi = document.getElementById('basvuruSirket').value.trim();
         var yetkili = document.getElementById('basvuruYetkili').value.trim();
         var telefon = document.getElementById('basvuruTel').value.trim();
@@ -693,43 +644,34 @@
             return;
         }
 
-        var istekler = await getFirebaseVeri('istekler');
-        istekler.push({
+        hafizaIstekleri.push({
             id: 'istek_' + Date.now(),
             sirketAdi: sirketAdi,
             yetkili: yetkili,
             telefon: telefon,
-            durum: 'Onay Bekliyor',
             tarih: new Date().toLocaleDateString('tr-TR')
         });
         
-        await firebaseKaydet('istekler', istekler);
-
         document.getElementById('basvuruSirket').value = '';
         document.getElementById('basvuruYetkili').value = '';
         document.getElementById('basvuruTel').value = '';
-        alert("Başvurunuz başarıyla Google bulut sistemine gönderildi!");
+        alert("Kayıt oluşturuldu!");
     }
 
-    async function sirketGirisYap() {
-        var izinliMi = await sistemKilitKontrolu();
-        if (!izinliMi) return;
-
+    function sirketGirisYap() {
         var sirketAdi = document.getElementById('girisSirketAdi').value.trim();
         var yetkiliAdi = document.getElementById('girisYetkiliAdi').value.trim();
         var telefon = document.getElementById('girisTelefon').value.trim();
 
         if (!sirketAdi || !yetkiliAdi || !telefon) {
-            alert("Lütfen Şirket Adı, Yetkili Adı ve Telefon numaranızı eksiksiz yazın!");
+            alert("Lütfen bilgileri eksiksiz yazın!");
             return;
         }
 
-        var istekler = await getFirebaseVeri('istekler');
         var bulunan = null;
-        for (var i = 0; i < istekler.length; i++) {
-            var r = istekler[i];
-            if (r && r.sirketAdi && r.yetkili && r.telefon &&
-                r.sirketAdi.toLowerCase() === sirketAdi.toLowerCase() && 
+        for (var i = 0; i < hafizaIstekleri.length; i++) {
+            var r = hafizaIstekleri[i];
+            if (r && r.sirketAdi.toLowerCase() === sirketAdi.toLowerCase() && 
                 r.yetkili.toLowerCase() === yetkiliAdi.toLowerCase() && 
                 r.telefon === telefon) {
                 bulunan = r;
@@ -738,18 +680,12 @@
         }
 
         if (bulunan) {
-            if (bulunan.durum === 'Onaylandı') {
-                document.getElementById('homeScreen').classList.add('hidden');
-                document.getElementById('formScreen').classList.remove('hidden');
-                document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
-                alert("Giriş başarılı! Hoş geldiniz.");
-            } else if (bulunan.durum === 'Engellendi') {
-                alert("Erişim Reddedildi: Bu kayıt yönetici tarafından engellenmiştir.");
-            } else {
-                alert("Erişim Beklemede: Bu başvuru henüz onaylanmamıştır! Giriş yapamazsınız.");
-            }
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('formScreen').classList.remove('hidden');
+            document.getElementById('girisTarihSaat').value = suankiTarihSaatGetir();
+            alert("Giriş başarılı!");
         } else {
-            alert("Erişim Reddedildi: Onaylanmamış veya sistemde kayıtlı olmayan bilgiler!");
+            alert("Erişim Reddedildi: Bilgiler eşleşmedi!");
         }
     }
 
@@ -761,75 +697,42 @@
             document.getElementById('adminPanelScreen').classList.remove('hidden');
             yoneticiIstekleriniGoster();
         } else {
-            alert("Hatalı yönetici şifresi!");
+            alert("Hatalı şifre!");
         }
     }
 
-    async function yoneticiIstekleriniGoster() {
+    function yoneticiIstekleriniGoster() {
         var container = document.getElementById('pendingRequestsList');
-        var istekler = await getFirebaseVeri('istekler');
-
-        if (istekler.length === 0) {
-            container.innerHTML = '<div class="empty-message">Henüz gelen başvuru bulunmuyor.</div>';
+        if (hafizaIstekleri.length === 0) {
+            container.innerHTML = '<div class="empty-message">Kayıt bulunmuyor.</div>';
             return;
         }
 
         var html = '';
-        for (var i = 0; i < istekler.length; i++) {
-            var req = istekler[i];
-            if (!req) continue;
-            var durumClass = req.durum === 'Engellendi' ? 'request-card blocked' : 'request-card';
-            var engelleKaldirBtn = req.durum === 'Engellendi' 
-                ? '<button class="btn-success" onclick="durumDegistir(\'' + req.id + '\', \'Onay Bekliyor\')">Engeli Kaldır</button>'
-                : '<button class="btn-danger" onclick="durumDegistir(\'' + req.id + '\', \'Engellendi\')">Engelle</button>';
-
-            var onayBtn = req.durum !== 'Onaylandı' 
-                ? '<button class="btn-success" onclick="durumDegistir(\'' + req.id + '\', \'Onaylandı\')">Onayla</button>' 
-                : '';
-
-            html += '<div class="' + durumClass + '">' +
+        for (var i = 0; i < hafizaIstekleri.length; i++) {
+            var req = hafizaIstekleri[i];
+            html += '<div class="request-card">' +
                 '<p><strong>İşletme:</strong> ' + req.sirketAdi + '</p>' +
                 '<p><strong>Yetkili:</strong> ' + req.yetkili + '</p>' +
                 '<p><strong>Telefon:</strong> ' + req.telefon + '</p>' +
-                '<p><strong>Durum:</strong> <span style="font-weight:bold; color:' + (req.durum==='Engellendi'?'red':(req.durum==='Onaylandı'?'green':'orange')) + '">' + req.durum + '</span></p>' +
                 '<div class="card-actions">' +
                     '<span class="time-badge">📅 ' + req.tarih + '</span>' +
-                    '<div style="display: flex; gap: 5px;">' +
-                        onayBtn +
-                        engelleKaldirBtn +
-                        '<button class="btn-danger" style="background:#6c757d;" onclick="basvuruyuSil(\'' + req.id + '\')">Sil</button>' +
-                    '</div>' +
+                    '<button class="btn-danger" onclick="basvuruyuSil(\'' + req.id + '\')">Sil</button>' +
                 '</div>' +
             '</div>';
         }
         container.innerHTML = html;
     }
 
-    async function durumDegistir(id, yeniDurum) {
-        var istekler = await getFirebaseVeri('istekler');
-        for (var i = 0; i < istekler.length; i++) {
-            if (istekler[i] && istekler[i].id === id) {
-                istekler[i].durum = yeniDurum;
-                break;
+    function basvuruyuSil(id) {
+        var yeniListe = [];
+        for (var i = 0; i < hafizaIstekleri.length; i++) {
+            if (hafizaIstekleri[i].id !== id) {
+                yeniListe.push(hafizaIstekleri[i]);
             }
         }
-        await firebaseKaydet('istekler', istekler);
+        hafizaIstekleri = yeniListe;
         yoneticiIstekleriniGoster();
-        alert("Durum '" + yeniDurum + "' olarak güncellendi!");
-    }
-
-    async function basvuruyuSil(id) {
-        if (confirm("Bu başvuruyu silmek istediğinize emin misiniz?")) {
-            var istekler = await getFirebaseVeri('istekler');
-            var yeniListe = [];
-            for (var i = 0; i < istekler.length; i++) {
-                if (istekler[i] && istekler[i].id !== id) {
-                    yeniListe.push(istekler[i]);
-                }
-            }
-            await firebaseKaydet('istekler', yeniListe);
-            yoneticiIstekleriniGoster();
-        }
     }
 
     function anaEkranaDon() {
@@ -839,10 +742,10 @@
         document.getElementById('homeScreen').classList.remove('hidden');
     }
 
-    async function openArchive() {
+    function openArchive() {
         document.getElementById('formScreen').classList.add('hidden');
         document.getElementById('archiveScreen').classList.remove('hidden');
-        await listeyiGoster();
+        listeyiGoster();
     }
 
     function yeniKayitFormuAc() {
@@ -868,10 +771,7 @@
         setCinsiyet('Erkek');
     }
 
-    async function kaydetZiyaretci() {
-        var izinliMi = await sistemKilitKontrolu();
-        if (!izinliMi) return;
-
+    function kaydetZiyaretci() {
         var duzenlenenId = document.getElementById('duzenlenenId').value;
         var plaka = document.getElementById('plaka').value.trim();
         var adSoyad = document.getElementById('adSoyad').value.trim();
@@ -889,15 +789,14 @@
             return;
         }
 
-        var arsiv = await getFirebaseVeri('arsiv');
         var eskiFotoOn = null;
         var eskiFotoArka = null;
 
         if (duzenlenenId) {
-            for (var i = 0; i < arsiv.length; i++) {
-                if (arsiv[i] && arsiv[i].id == duzenlenenId) {
-                    eskiFotoOn = arsiv[i].fotoOn;
-                    eskiFotoArka = arsiv[i].fotoArka;
+            for (var i = 0; i < hafizaArsivi.length; i++) {
+                if (hafizaArsivi[i] && hafizaArsivi[i].id == duzenlenenId) {
+                    eskiFotoOn = hafizaArsivi[i].fotoOn;
+                    eskiFotoArka = hafizaArsivi[i].fotoArka;
                     break;
                 }
             }
@@ -905,33 +804,33 @@
 
         if (fotoInputOn.files && fotoInputOn.files[0]) {
             var readerOn = new FileReader();
-            readerOn.onload = async function(eOn) {
+            readerOn.onload = function(eOn) {
                 var sonucOn = eOn.target.result;
                 if (fotoInputArka.files && fotoInputArka.files[0]) {
                     var readerArka = new FileReader();
-                    readerArka.onload = async function(eArka) {
-                        await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eArka.target.result);
+                    readerArka.onload = function(eArka) {
+                        veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eArka.target.result);
                     };
                     readerArka.readAsDataURL(fotoInputArka.files[0]);
                 } else {
-                    await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eskiFotoArka);
+                    veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, sonucOn, eskiFotoArka);
                 }
             };
             readerOn.readAsDataURL(fotoInputOn.files[0]);
         } else {
             if (fotoInputArka.files && fotoInputArka.files[0]) {
                 var readerArka = new FileReader();
-                readerArka.onload = async function(eArka) {
-                    await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eArka.target.result);
+                readerArka.onload = function(eArka) {
+                    veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eArka.target.result);
                 };
                 readerArka.readAsDataURL(fotoInputArka.files[0]);
             } else {
-                await veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eskiFotoArka);
+                veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, eskiFotoOn, eskiFotoArka);
             }
         }
     }
 
-    async function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoOnData, fotoArkaData) {
+    function veritabaninaYazVeyaGuncelle(duzenlenenId, plaka, adSoyad, tcNo, telefon, girisTarih, cikisTarih, ziyaretEdilen, fotoOnData, fotoArkaData) {
         function formatTarih(tarihStr) {
             if (!tarihStr) return 'Belirtilmedi';
             var d = new Date(tarihStr);
@@ -954,30 +853,27 @@
             fotoArka: fotoArkaData || null
         };
 
-        var arsiv = await getFirebaseVeri('arsiv');
         if (duzenlenenId) {
-            for (var i = 0; i < arsiv.length; i++) {
-                if (arsiv[i] && arsiv[i].id == duzenlenenId) {
-                    arsiv[i] = kayitVerisi;
+            for (var i = 0; i < hafizaArsivi.length; i++) {
+                if (hafizaArsivi[i] && hafizaArsivi[i].id == duzenlenenId) {
+                    hafizaArsivi[i] = kayitVerisi;
                     break;
                 }
             }
-            alert("Kayıt Google bulut sisteminde güncellendi!");
+            alert("Kayıt güncellendi!");
         } else {
-            arsiv.push(kayitVerisi);
-            alert("Kayıt başarıyla Google bulut sistemine eklendi!");
+            hafizaArsivi.push(kayitVerisi);
+            alert("Kayıt eklendi!");
         }
-        await firebaseKaydet('arsiv', arsiv);
         formuSifirla();
         openArchive();
     }
 
-    async function kaydiDuzenle(id) {
-        var arsiv = await getFirebaseVeri('arsiv');
+    function kaydiDuzenle(id) {
         var k = null;
-        for (var i = 0; i < arsiv.length; i++) {
-            if (arsiv[i] && arsiv[i].id == id) {
-                k = arsiv[i];
+        for (var i = 0; i < hafizaArsivi.length; i++) {
+            if (hafizaArsivi[i] && hafizaArsivi[i].id == id) {
+                k = hafizaArsivi[i];
                 break;
             }
         }
@@ -999,18 +895,16 @@
         }
 
         setCinsiyet(k.cinsiyet);
-
         document.getElementById('archiveScreen').classList.add('hidden');
         document.getElementById('formScreen').classList.remove('hidden');
     }
 
-    async function listeyiGoster(filtreMetni) {
+    function listeyiGoster(filtreMetni) {
         var listContainer = document.getElementById('visitorList');
-        var hamKayitlar = await getFirebaseVeri('arsiv');
-        var kayitlar = hamKayitlar.filter(Boolean).slice().reverse();
+        var kayitlar = hafizaArsivi.slice().reverse();
 
         if (kayitlar.length === 0) {
-            listContainer.innerHTML = '<div class="empty-message">Bulut arşivinde henüz kayıt bulunmuyor.</div>';
+            listContainer.innerHTML = '<div class="empty-message">Arşiv boş.</div>';
             return;
         }
 
@@ -1020,10 +914,9 @@
             for (var i = 0; i < kayitlar.length; i++) {
                 var k = kayitlar[i];
                 if (!k) continue;
-                var tcMatch = k.tcNo && k.tcNo.toLowerCase().indexOf(aranan) !== -1;
-                var plakaMatch = k.plaka && k.plaka.toLowerCase().indexOf(aranan) !== -1;
-                var adMatch = k.adSoyad && k.adSoyad.toLowerCase().indexOf(aranan) !== -1;
-                if (tcMatch || plakaMatch || adMatch) {
+                if ((k.tcNo && k.tcNo.toLowerCase().indexOf(aranan) !== -1) || 
+                    (k.plaka && k.plaka.toLowerCase().indexOf(aranan) !== -1) || 
+                    (k.adSoyad && k.adSoyad.toLowerCase().indexOf(aranan) !== -1)) {
                     filtrelenmis.push(k);
                 }
             }
@@ -1031,15 +924,13 @@
         }
 
         if (kayitlar.length === 0) {
-            listContainer.innerHTML = '<div class="empty-message">Aradığınız kriterlere uygun kayıt bulunamadı.</div>';
+            listContainer.innerHTML = '<div class="empty-message">Sonuç bulunamadı.</div>';
             return;
         }
 
         var html = '';
         for (var j = 0; j < kayitlar.length; j++) {
             var k = kayitlar[j];
-            if (!k) continue;
-            
             var fotoHtml = '<div class="photo-container">';
             if (k.fotoOn) {
                 fotoHtml += '<div style="text-align:center;"><span style="font-size:10px; color:#555;">Ön Yüz</span><br><img src="' + k.fotoOn + '" class="id-photo-preview" onclick="resmiBuyut(\'' + k.fotoOn + '\')"></div>';
@@ -1068,26 +959,24 @@
         listContainer.innerHTML = html;
     }
 
-    async function kaydiSil(id) {
-        if (confirm("Bu kaydı buluttan silmek istediğinize emin misiniz?")) {
-            var arsiv = await getFirebaseVeri('arsiv');
+    function kaydiSil(id) {
+        if (confirm("Silmek istediğinize emin misiniz?")) {
             var yeniArsiv = [];
-            for (var i = 0; i < arsiv.length; i++) {
-                if (arsiv[i] && arsiv[i].id !== id) {
-                    yeniArsiv.push(arsiv[i]);
+            for (var i = 0; i < hafizaArsivi.length; i++) {
+                if (hafizaArsivi[i].id !== id) {
+                    yeniArsiv.push(hafizaArsivi[i]);
                 }
             }
-            await firebaseKaydet('arsiv', yeniArsiv);
-            await listeyiGoster(document.getElementById('searchInput').value);
+            hafizaArsivi = yeniArsiv;
+            listeyiGoster(document.getElementById('searchInput').value);
         }
     }
 
-    async function aramaYap() {
+    function aramaYap() {
         var metin = document.getElementById('searchInput').value;
-        await listeyiGoster(metin);
+        listeyiGoster(metin);
     }
 
-    // Tarayıcının Yerleşik Yazdırma/PDF Kaydetme Motorunu Tetikleyen Fonksiyon
     function arsiviPdfOlarakIndir() {
         window.print();
     }
